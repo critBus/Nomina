@@ -158,7 +158,7 @@ class Asistencia(models.Model):
     horas_trabajadas = models.IntegerField(
         verbose_name="Horas Trabajadas",
         default=8,
-        validators=[MinValueValidator(1), MaxValueValidator(8)],
+        validators=[MinValueValidator(1), MaxValueValidator(9)],
     )
     trabajador = models.ForeignKey(
         Trabajador, on_delete=models.CASCADE, verbose_name="Trabajador"
