@@ -1,14 +1,17 @@
 from django.contrib import admin
-from .models import *
+
 from apps.users.models import User
+
+from .models import *
+
 # Register your models here.
+
 
 @admin.register(Cargo)
 class CargoAdmin(admin.ModelAdmin):
     list_display = (
         "cargo",
         "salario_basico",
-
     )
     search_fields = (
         "cargo",
@@ -19,6 +22,7 @@ class CargoAdmin(admin.ModelAdmin):
         "cargo",
         "salario_basico",
     )
+
 
 @admin.register(Escala)
 class EscalaAdmin(admin.ModelAdmin):
@@ -68,17 +72,16 @@ class TrabajadorAdmin(admin.ModelAdmin):
 
 @admin.register(Asistencia)
 class AsistenciaAdmin(admin.ModelAdmin):
-    list_display = (
-        "fecha",
-        "horas_trabajadas",
-        "trabajador"
-    )
+    list_display = ("fecha", "horas_trabajadas", "trabajador")
     search_fields = (
         "fecha",
         "horas_trabajadas",
         "trabajador",
     )
-    list_filter = ("horas_trabajadas","trabajador",)
+    list_filter = (
+        "horas_trabajadas",
+        "trabajador",
+    )
     ordering = (
         "fecha",
         "horas_trabajadas",
@@ -89,18 +92,17 @@ class AsistenciaAdmin(admin.ModelAdmin):
 
 @admin.register(CertificadoMedico)
 class CertificadoMedicoAdmin(admin.ModelAdmin):
-    list_display = (
-        "fecha_inicio",
-        "fecha_fin",
-        "trabajador"
-    )
+    list_display = ("fecha_inicio", "fecha_fin", "trabajador")
     search_fields = (
         "fecha_inicio",
         "fecha_fin",
         "trabajador",
     )
-    list_filter = ("fecha_inicio",
-        "fecha_fin","trabajador",)
+    list_filter = (
+        "fecha_inicio",
+        "fecha_fin",
+        "trabajador",
+    )
     ordering = (
         "fecha_inicio",
         "fecha_fin",
@@ -109,21 +111,19 @@ class CertificadoMedicoAdmin(admin.ModelAdmin):
     date_hierarchy = "fecha_inicio"
 
 
-
 @admin.register(CertificadoMaternidad)
 class CertificadoMaternidadAdmin(admin.ModelAdmin):
-    list_display = (
-        "fecha_inicio",
-        "fecha_fin",
-        "trabajador"
-    )
+    list_display = ("fecha_inicio", "fecha_fin", "trabajador")
     search_fields = (
         "fecha_inicio",
         "fecha_fin",
         "trabajador",
     )
-    list_filter = ("fecha_inicio",
-        "fecha_fin","trabajador",)
+    list_filter = (
+        "fecha_inicio",
+        "fecha_fin",
+        "trabajador",
+    )
     ordering = (
         "fecha_inicio",
         "fecha_fin",

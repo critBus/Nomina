@@ -10,13 +10,15 @@ def not_empty_validation(texto):
 
 
 def length_validation_8(texto):
-    cantidad_caracteres=8
+    cantidad_caracteres = 8
     if len(str(texto).strip()) != cantidad_caracteres:
         raise ValidationError(
             f"Tiene que tener exactamente {cantidad_caracteres} caracteres "
         )
+
+
 def length_validation_11(texto):
-    cantidad_caracteres=11
+    cantidad_caracteres = 11
     if len(str(texto).strip()) != cantidad_caracteres:
         raise ValidationError(
             f"Tiene que tener exactamente {cantidad_caracteres} caracteres "
@@ -154,7 +156,9 @@ class Asistencia(models.Model):
         validators=[date_not_old_validation, date_not_future_validation],
     )
     horas_trabajadas = models.IntegerField(
-        verbose_name="Horas Trabajadas",default=8, validators=[MinValueValidator(1),MaxValueValidator(8)]
+        verbose_name="Horas Trabajadas",
+        default=8,
+        validators=[MinValueValidator(1), MaxValueValidator(8)],
     )
     trabajador = models.ForeignKey(
         Trabajador, on_delete=models.CASCADE, verbose_name="Trabajador"
