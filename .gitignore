@@ -158,3 +158,4 @@ static
 .env.despliegue
 .env.dev
 myprojectenv/
+db.sqlite3
