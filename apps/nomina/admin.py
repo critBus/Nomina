@@ -1,10 +1,20 @@
 from django.contrib import admin
 
 from apps.users.models import User
+from config.utils.utils_reportes import AdministradorDeReporte
 
 from .models import *
 
 # Register your models here.
+
+REPORTE_Cargo_PDF=AdministradorDeReporte()
+REPORTE_Cargo_PDF.setClaseModelo(Cargo)
+REPORTE_Cargo_PDF.titulo="Cargos"
+REPORTE_Cargo_PDF.add('Cargo',lambda v:v.cargo)
+# REPORTE_INSTITUCIONES_PRODUCTIVA_PDF.add('Abreviado',lambda v:v.NombreAbreviado)
+REPORTE_Cargo_PDF.add('Salario Basico',lambda v:v.salario_basico)
+REPORTE_Cargo_PDF.add('Trabajadores',lambda v:"<br/>".join([f"{z.nombre} {z.apellidos}" for z in v.trabajador_set.all()]))
+
 
 
 @admin.register(Cargo)
@@ -22,6 +32,7 @@ class CargoAdmin(admin.ModelAdmin):
         "cargo",
         "salario_basico",
     )
+    actions = [REPORTE_Cargo_PDF.getAction()]
 
 
 @admin.register(Escala)
