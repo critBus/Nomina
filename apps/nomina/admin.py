@@ -1,25 +1,26 @@
 from django.contrib import admin
+from django_reportbroD.reportcore import reportPDF
 
 from apps.users.models import User
 from config.utils.utils_reportes import AdministradorDeReporte
 
 from .models import *
-from django_reportbroD.reportcore import reportPDF
+
 
 @admin.register(SalarioEscala)
 class SalarioEscalaAdmin(admin.ModelAdmin):
     pass
 
-def generar_pdf(modeladmin, request, queryset):
 
+def generar_pdf(modeladmin, request, queryset):
     trabajadores = queryset
 
-
-    data = {"trabajadores": [{
-        "nombre":v.nombre,
-        "apellidos":v.apellidos,
-        "cargo": v.cargo.cargo
-    } for v in trabajadores],}
+    data = {
+        "trabajadores": [
+            {"nombre": v.nombre, "apellidos": v.apellidos, "cargo": v.cargo.cargo}
+            for v in trabajadores
+        ],
+    }
 
     code_report = 1
 
@@ -54,7 +55,6 @@ class TrabajadorAdmin(admin.ModelAdmin):
         "telefono",
     )
     actions = [generar_pdf]
-
 
 
 @admin.register(Asistencia)
@@ -117,7 +117,6 @@ class CertificadoMaternidadAdmin(admin.ModelAdmin):
         "trabajador",
     )
     date_hierarchy = "fecha_inicio"
-
 
 
 # Register your models here.
