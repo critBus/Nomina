@@ -47,7 +47,7 @@ INSTALLED_APPS = [
     "apps.base",
     "apps.users",
     "apps.nomina",
-    #'django_reportbroD.apps.ReportbrodConfig'
+    'django_reportbroD.apps.ReportbrodConfig'
 ]
 
 MIDDLEWARE = [
@@ -73,7 +73,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                #'django_reportbroD.menus.get_menu_items',
+                'django_reportbroD.menus.get_menu_items',
             ],
         },
     },

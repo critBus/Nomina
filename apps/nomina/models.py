@@ -1,6 +1,7 @@
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator
 from django.db import models
+from django.db.models import Sum
 from django.utils import timezone
 
 
@@ -36,37 +37,40 @@ def date_not_future_validation(fecha):
     if fecha > hoy:
         raise ValidationError("La fecha no puede ser en el futuro")
 
-
-class Cargo(models.Model):
+class SalarioEscala(models.Model):
     class Meta:
-        verbose_name = "Cargo"
-        verbose_name_plural = "Cargos"
+        verbose_name = "Salario Escala"
+        verbose_name_plural = "Salarios Escala"
 
-    cargo = models.CharField(
-        verbose_name="Cargo", max_length=256, validators=[not_empty_validation]
+    grupo_complejidad = models.CharField(
+        verbose_name="Cargo", max_length=256,choices=[("I","I",),("II","II",)]
     )
-    salario_basico = models.FloatField(
-        verbose_name="Salario Basico", validators=[MinValueValidator(0)]
+    grupo_escala = models.CharField(
+        verbose_name="Cargo", max_length=256, choices=[("II","II",),
+                                                        ("III", "III",),
+                                                       ("IV", "IV",),
+                                                       ("V", "V",),
+                                                       ("IV", "IV",)
+                                                       ]
     )
+    rango_salarial=models.IntegerField(choices=(
+        (1, 'Rango Salarial 1'),
+        (2, 'Rango Salarial 2'),
+        (3, 'Rango Salarial 3'),
+        (4, 'Rango Salarial 4'),
+        (5, 'Rango Salarial 5'),
+    ))
+
+    salario = models.FloatField(
+        verbose_name="Salario", validators=[MinValueValidator(0)]
+    )
+
+    @property
+    def categoria_ocupacional(self):
+        return "Operario" if (self.grupo_complejidad == "I") else "Servicios"
 
     def __str__(self):
-        return self.cargo
-
-
-class Escala(models.Model):
-    class Meta:
-        verbose_name = "Escala"
-        verbose_name_plural = "Escalas"
-
-    escala = models.CharField(
-        verbose_name="Escala", max_length=256, validators=[not_empty_validation]
-    )
-    salario_basico = models.FloatField(
-        verbose_name="Salario Basico", validators=[MinValueValidator(0)]
-    )
-
-    def __str__(self):
-        return self.escala
+        return f"{self.grupo_complejidad} {self.grupo_escala} {self.rango_salarial} {self.salario}"
 
 
 class Trabajador(models.Model):
@@ -138,8 +142,11 @@ class Trabajador(models.Model):
             ),
         ],
     )
-    escala = models.ForeignKey(Escala, on_delete=models.CASCADE, verbose_name="Escala")
-    cargo = models.ForeignKey(Cargo, on_delete=models.CASCADE, verbose_name="Cargo")
+    salario_escala = models.ForeignKey(SalarioEscala,
+                                       on_delete=models.SET_NULL,
+                                       verbose_name="Salario Escala",null=True,blank=True)
+    # escala = models.ForeignKey(Escala, on_delete=models.CASCADE, verbose_name="Escala")
+    # cargo = models.ForeignKey(Cargo, on_delete=models.CASCADE, verbose_name="Cargo")
 
     def __str__(self):
         return f"{self.nombre} {self.apellidos}"
@@ -236,3 +243,136 @@ class CertificadoMaternidad(models.Model):
         return (
             f"{self.trabajador.nombre} {self.trabajador.apellidos} {self.fecha_inicio}"
         )
+
+class PagoPorUtilidades(models.Model):
+    fecha = models.DateField(verbose_name="Fecha", default=timezone.now)
+    pago = models.FloatField(
+        verbose_name="Pago Por Utilidades",
+        validators=[MinValueValidator(0)]
+    )
+    trabajador = models.ForeignKey(
+        Trabajador, on_delete=models.CASCADE, verbose_name="Trabajador"
+    )
+
+class PagoPorSubsidios(models.Model):
+    fecha = models.DateField(verbose_name="Fecha", default=timezone.now)
+    pago = models.FloatField(
+        verbose_name="Pago Por Subsidios",
+        validators=[MinValueValidator(0)]
+    )
+    trabajador = models.ForeignKey(
+        Trabajador, on_delete=models.CASCADE, verbose_name="Trabajador"
+    )
+class SalarioMensualTotalPagado(models.Model):
+    fecha = models.DateField(verbose_name="Fecha",default=timezone.now)
+    trabajador = models.ForeignKey(
+        Trabajador, on_delete=models.CASCADE, verbose_name="Trabajador"
+    )
+    salario_devengado_mensual=models.FloatField(
+        verbose_name="Salario Devengado Mensual",
+        validators=[MinValueValidator(0)]
+    )
+    salario_basico_mensual = models.FloatField(
+        verbose_name="Salario Basico Mensual",
+        validators=[MinValueValidator(0)]
+    )
+    pago_por_utilidades = models.ForeignKey(
+        PagoPorUtilidades,
+        on_delete=models.SET_NULL,
+        verbose_name="Pago Por Utilidades",
+        null=True, blank=True
+    )
+
+    pago_por_subsidios=models.ForeignKey(
+        PagoPorSubsidios,
+        on_delete=models.SET_NULL,
+        verbose_name="Pago Por Subsidios",
+        null=True,blank=True
+    )
+
+    def actualizar_salario_devengado(self):
+        self.salario_devengado_mensual=self.salario_basico_mensual
+        if self.pago_por_utilidades:
+            self.salario_devengado_mensual-=self.pago_por_utilidades.pago
+        if self.pago_por_subsidios:
+            self.salario_devengado_mensual-=self.pago_por_subsidios.pago
+    # @staticmethod
+    # def calcular_salario_anual(year,trabajador):
+    #     #SA
+    #     return SalarioMensualTotalPagado.objects.filter(
+    #         fecha__year=year,trabajador=trabajador
+    #     ).aggregate(total=Sum('salario_basico_mensual'))['total']
+    #
+    # @staticmethod
+    # def calcular_importe_semanal(year,trabajador):
+    #     #ISP
+    #     SA=SalarioMensualTotalPagado.calcular_salario_anual(year,trabajador)
+    #     return SA/52
+
+    def calcular_pago_licencia_maternidad_base(self,fecha,trabajador,es_simple:bool):
+        fecha_limite_inferior=fecha-timezone.timedelta(days=365)
+        fecha_limite_inferior.replace(day=1)
+        SA = SalarioMensualTotalPagado.objects.filter(
+            fecha__gte=fecha_limite_inferior,trabajador=trabajador
+        ).order_by("-fecha")[:12].aggregate(total=Sum('salario_basico_mensual'))['total']
+        ISP=SA/52
+        Pres_Eco=ISP * 6 if es_simple else ISP * 8
+        return Pres_Eco
+
+    def calcular_pago_licencia_prenatal(self,fecha_de_inicio_del_embarazo ,trabajador,es_simple:bool):
+        Pres_Eco =self.calcular_pago_licencia_maternidad_base(fecha_de_inicio_del_embarazo,trabajador,es_simple)
+        return Pres_Eco
+
+    def calcular_pago_licencia_posnatal(self,fecha_de_inicio_del_embarazo ,trabajador,es_simple:bool):
+        Pres_Eco =self.calcular_pago_licencia_maternidad_base(fecha_de_inicio_del_embarazo,trabajador,es_simple)
+        return Pres_Eco
+
+    def save(self, *args, **kwargs):
+        self.actualizar_salario_devengado()
+        return super().save(*args, **kwargs)
+
+    # @staticmethod
+    # def calcular_pago_maternidad(year_actual,trabajador):
+    #     SA=SalarioMensualTotalPagado.calcular_salario_anual(year_actual-1,trabajador)
+
+
+
+
+
+    def __str__(self):
+        return f"{self.trabajador.nombre} {self.trabajador.apellidos} {self.fecha}"
+
+
+
+
+
+# class Cargo(models.Model):
+#     class Meta:
+#         verbose_name = "Cargo"
+#         verbose_name_plural = "Cargos"
+#
+#     cargo = models.CharField(
+#         verbose_name="Cargo", max_length=256, validators=[not_empty_validation]
+#     )
+#     salario_basico = models.FloatField(
+#         verbose_name="Salario Basico", validators=[MinValueValidator(0)]
+#     )
+#
+#     def __str__(self):
+#         return self.cargo
+
+
+# class Escala(models.Model):
+#     class Meta:
+#         verbose_name = "Escala"
+#         verbose_name_plural = "Escalas"
+#
+#     escala = models.CharField(
+#         verbose_name="Escala", max_length=256, validators=[not_empty_validation]
+#     )
+#     salario_basico = models.FloatField(
+#         verbose_name="Salario Basico", validators=[MinValueValidator(0)]
+#     )
+#
+#     def __str__(self):
+#         return self.escala

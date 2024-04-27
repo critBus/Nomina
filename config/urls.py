@@ -28,6 +28,7 @@ urlpatterns = [
     path("", include("apps.base.urls")),
     path("admin/", admin.site.urls),
     path("", include("apps.users.urls")),
+    path("reportbroD/", include("django_reportbroD.urls", namespace="reportbroD")),
 ]
 anterior = settings.DEBUG
 settings.DEBUG = True
