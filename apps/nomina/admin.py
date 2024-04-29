@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django_reportbroD.reportcore import reportPDF
-
+from django.db.models import Case, CharField, Q, Value, When,BooleanField
 from apps.users.models import User
 from config.utils.utils_reportes import AdministradorDeReporte
 
@@ -20,11 +20,7 @@ class LicenciaPrenatalInline(admin.StackedInline):
     max_num = 1
     exclude = ["trabajador",]
     can_delete = False
-#
-# from django.forms.models import BaseInlineFormSet
-# class ItemInlineFormSet(BaseInlineFormSet):
-#    def clean(self):
-#       super(ItemInlineFormSet, self).clean()
+
 
 class PrimeraLicenciaPosnatalInline(admin.StackedInline):
     model = PrimeraLicenciaPosnatal
@@ -33,10 +29,9 @@ class PrimeraLicenciaPosnatalInline(admin.StackedInline):
 
         "prestacion_economica",
     )
-    #min_num = 1
+
     max_num = 1
-    # exclude = ["licencia_prenatal",]
-    # formset = ItemInlineFormSet
+
 
 
 class SegundaLicenciaPosnatalInline(admin.StackedInline):
@@ -50,7 +45,7 @@ class SegundaLicenciaPosnatalInline(admin.StackedInline):
     #min_num = 1
     max_num = 1
     can_delete = False
-    # exclude = ["primera_licencia_posnatal",]
+
 
 
 class PrestacionSocialInline(admin.StackedInline):
@@ -64,16 +59,27 @@ class PrestacionSocialInline(admin.StackedInline):
     can_delete=False
     #min_num = 1
     max_num = 1
-    # exclude = ["segunda_licencia_posnatal",]
+
+class primera_licencia_posnatal_Filter(admin.SimpleListFilter):
+    title = "Primera Posnatal"
+    parameter_name = "nada"
+
+    def lookups(self, request, model_admin):
+        return ((True, True),(False,False))
+
+    def queryset(self, request, queryset):
+        # apply the filter to the queryset
+        if self.value():
+            valor=self.value()
+            # print(valor)
+            # print(type(valor))
+            return queryset.filter(
+                        primeralicenciaposnatal__isnull=valor.lower()=="false"
+                    )
+        return queryset
 
 
-    # def clean(self):
-    #     super().clean()
-    # def get_formset(self, request, obj=None, **kwargs):
-    #     formset = super().get_formset(request, obj, **kwargs)
-    #     # Realiza la modificación del valor aquí
-    #     #formset.form.base_fields['campo_a_modificar'].initial = 'Nuevo-Valor'
-    #     return formset
+
 
 @admin.register(LicenciaMaternidad)
 class LicenciaMaternidadAdmin(admin.ModelAdmin):
@@ -88,6 +94,7 @@ class LicenciaMaternidadAdmin(admin.ModelAdmin):
     list_display = (
         "trabajador",
         "fecha_inicio",
+        "view_primera_licencia_posnatal",
     )
     search_fields = (
         "trabajador",
@@ -96,6 +103,7 @@ class LicenciaMaternidadAdmin(admin.ModelAdmin):
     list_filter = (
         "trabajador",
         "fecha_inicio",
+        primera_licencia_posnatal_Filter
     )
     ordering = (
         "trabajador",
@@ -103,26 +111,39 @@ class LicenciaMaternidadAdmin(admin.ModelAdmin):
     )
     date_hierarchy = "fecha_inicio"
 
+
+
+    def get_queryset(self, request):
+        return (
+            super()
+            .get_queryset(request)
+            .annotate(
+                hay_primera_licencia_posnatal=Case(
+                    When(
+                        primeralicenciaposnatal__isnull=True,
+                        then=False,
+                    ),
+                    default=True,
+                    output_field=BooleanField(),
+                )
+            )
+        )
+
+    def view_primera_licencia_posnatal(self, obj):
+        return PrimeraLicenciaPosnatal.objects.filter(licencia_maternidad=obj).exists()
+
+    view_primera_licencia_posnatal.admin_order_field = (
+        "hay_primera_licencia_posnatal"
+    )
+    view_primera_licencia_posnatal.short_description = "Primera Licencia Posnatal"
+
+
     def before_save(self, request, obj, form, change):
         prenatal = obj.licenciaprenatal
         if prenatal:
             prenatal.trabajador = obj.trabajador
             obj.fecha_inicio = prenatal.fecha_inicio
-        # if hasattr(obj,"primeralicenciaposnatal"):
-        #     primera=obj.primeralicenciaposnatal
-        #     if primera:
-        #         if not prenatal:
-        #             pass
-        #         primera.licencia_prenatal=prenatal
 
-
-        # if obj.atributo_seleccionado == 'valor_especifico':
-        # for inline_formset in self.get_inline_instances(request, obj):
-        #     for form in inline_formset:
-        #         if getattr(form, "Meta").model == LicenciaPrenatal:
-        #             form.instance.trabajador = obj.trabajador
-        #             obj.fecha_inicio = form.instance.fecha_inicio
-        #             return
 
     def save_related(self, request, form, formsets, change):
         # Llama a la función antes de guardar los modelos
