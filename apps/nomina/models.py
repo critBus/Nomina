@@ -214,7 +214,7 @@ class SalarioEscala(models.Model):
         elif self.grupo_complejidad == "III":
             return "Técnicos de actividad o gestion"
         elif self.grupo_complejidad == "IV":
-            return "Técnicos gestores de actividad de gestion "
+            return "Técnicos gestores de actividad de gestion"
         elif self.grupo_complejidad == "V":
             return "Técnicos actividades generales"
         return "Técnicos gestores actividades principales"

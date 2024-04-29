@@ -159,9 +159,122 @@ class LicenciaMaternidadAdmin(admin.ModelAdmin):
         return response
 
 
+
+class categoria_ocupacional_Filter(admin.SimpleListFilter):
+    title = "Primera Posnatal"
+    parameter_name = "nada"
+
+    def lookups(self, request, model_admin):
+        return (("Operario", "Operario"),
+                ("Servicios","Servicios"),
+                ("Técnicos de actividad o gestion", "Técnicos de actividad o gestion"),
+                ("Técnicos gestores de actividad de gestion", "Técnicos gestores de actividad de gestion"),
+                ("Técnicos actividades generales", "Técnicos actividades generales"),
+                ("Técnicos gestores actividades principales", "Técnicos gestores actividades principales"),
+                )
+
+    def queryset(self, request, queryset):
+        # apply the filter to the queryset
+        if self.value():
+            valor=self.value()
+            grupo_complejidad="VI"
+            if valor == "Operario":
+                grupo_complejidad = "I"
+
+            elif valor =="Servicios":
+                grupo_complejidad = "II"
+
+            elif valor == "Técnicos de actividad o gestion":
+                grupo_complejidad = "III"
+
+            elif valor == "Técnicos gestores de actividad de gestion":
+                grupo_complejidad = "IV"
+
+            elif valor == "Técnicos actividades generales":
+                grupo_complejidad = "V"
+
+            return queryset.filter(
+                grupo_complejidad=grupo_complejidad
+            )
+
+        return queryset
+
+
 @admin.register(SalarioEscala)
 class SalarioEscalaAdmin(admin.ModelAdmin):
-    pass
+    list_display = ("grupo_complejidad",
+                    "grupo_escala",
+                    "rango_salarial",
+                    "salario",
+                    "view_categoria_ocupacional"
+                    #"categoria_ocupacional",
+                    )
+    search_fields = (
+        "grupo_complejidad",
+        "grupo_escala",
+        "rango_salarial",
+        "salario",
+        #"categoria_ocupacional",
+    )
+    list_filter = (
+        "grupo_complejidad",
+        "grupo_escala",
+        "rango_salarial",
+        categoria_ocupacional_Filter,
+    )
+    ordering = (
+        "grupo_complejidad",
+        "grupo_escala",
+        "rango_salarial",
+        "salario",
+        #"categoria_ocupacional",
+    )
+
+    def get_queryset(self, request):
+        return (
+            super()
+            .get_queryset(request)
+            .annotate(
+                categoria_ocupacional2=Case(
+                    When(
+                        grupo_complejidad="I",
+                        then=Value("Operario"),
+                    ),
+                    When(
+                        grupo_complejidad="II",
+                        then=Value("Servicios"),
+                    ),
+                    When(
+                        grupo_complejidad="III",
+                        then=Value("Técnicos de actividad o gestion"),
+                    ),
+                    When(
+                        grupo_complejidad="IV",
+                        then=Value("Técnicos gestores de actividad de gestion"),
+                    ),
+                    When(
+                        grupo_complejidad="V",
+                        then=Value("Técnicos actividades generales"),
+                    ),
+                    When(
+                        grupo_complejidad="IV",
+                        then=Value("Técnicos gestores actividades principales"),
+                    ),
+                    default=Value("Técnicos gestores actividades principales"),
+                    output_field=CharField(),
+                )
+            )
+        )
+
+    def view_categoria_ocupacional(self, obj):
+        return obj.categoria_ocupacional
+
+    view_categoria_ocupacional.admin_order_field = (
+        "categoria_ocupacional2"
+    )
+    view_categoria_ocupacional.short_description = "Categoria Ocupacional"
+
+
 
 
 def generar_pdf(modeladmin, request, queryset):
