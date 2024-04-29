@@ -1,8 +1,20 @@
+from datetime import timedelta
+
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator
 from django.db import models
 from django.db.models import Sum
 from django.utils import timezone
+
+from apps.nomina.utils.util_maternidad import (
+    dias_entre_semana,
+    veces_supera_siete,
+    misma_semana,
+    dias_restantes_mes,
+    siguiente_dia_laborable,
+    primer_cumpleannos,
+    diferencia_menos_de_5_meses,
+)
 
 
 def not_empty_validation(texto):
@@ -352,16 +364,37 @@ class CertificadoMedico(models.Model):
         )
 
 
-class CertificadoMaternidad(models.Model):
+class LicenciaMaternidad(models.Model):
     class Meta:
-        unique_together = (
-            (
-                "trabajador",
-                "fecha_inicio",
-            ),
-        )
-        verbose_name = "Certificado Maternidad"
-        verbose_name_plural = "Certificados de Maternidad"
+        verbose_name = "Licencia de Maternidad"
+        verbose_name_plural = "Licencias de Maternidad"
+
+    trabajador = models.ForeignKey(
+        Trabajador, on_delete=models.CASCADE, verbose_name="Trabajador"
+    )
+
+    fecha_inicio = models.DateField(
+        verbose_name="Fecha Inicio", validators=[date_not_old_validation]
+    )
+
+
+
+    def __str__(self):
+        return f"{self.trabajador.nombre} {self.trabajador.apellidos}"
+
+
+
+
+class LicenciaPrenatal(models.Model):
+    class Meta:
+        # unique_together = (
+        #     (
+        #         "trabajador",
+        #         "fecha_inicio",
+        #     ),
+        # )
+        verbose_name = "Licencia Prenatal"
+        verbose_name_plural = "Licencias Prenatales"
 
     fecha_inicio = models.DateField(
         verbose_name="Fecha Inicio", validators=[date_not_old_validation]
@@ -372,6 +405,85 @@ class CertificadoMaternidad(models.Model):
     trabajador = models.ForeignKey(
         Trabajador, on_delete=models.CASCADE, verbose_name="Trabajador"
     )
+    licencia_maternidad = models.OneToOneField(
+        LicenciaMaternidad,
+        on_delete=models.CASCADE,
+    )
+    es_simple = models.BooleanField(default=True)
+
+    prestacion_economica = models.FloatField(
+        verbose_name="Prestación Económica", validators=[MinValueValidator(0)]
+    )
+    importe_semanal = models.FloatField(
+        verbose_name="Prestación Económica", validators=[MinValueValidator(0)]
+    )
+    salario_anual = models.FloatField(
+        verbose_name="Salario Anual", validators=[MinValueValidator(0)]
+    )
+
+    def clean(self):
+        super().clean()
+        if self.fecha_fin and self.fecha_inicio:
+            if self.fecha_fin <= self.fecha_inicio:
+                raise ValidationError(
+                    "La fecha de inicio debe ser inferior a la fecha de fin "
+                )
+            if diferencia_menos_de_5_meses(self.fecha_inicio, self.fecha_fin):
+                raise ValidationError(
+                    "Tiene que existir una distancia lógica entre ambas fechas"
+                )
+
+    def __str__(self):
+        return (
+            f"{self.trabajador.nombre} {self.trabajador.apellidos} {self.fecha_inicio}"
+        )
+
+    def save(self, *args, **kwargs):
+        fecha_de_inicio_del_embarazo = self.fecha_inicio
+        self.salario_anual = calcular_SA(
+            fecha=fecha_de_inicio_del_embarazo, trabajador=self.trabajador
+        )
+        ISP = (
+            self.salario_anual / 52
+        )  # calcular_ISP(fecha=fecha_de_inicio_del_embarazo,trabajador=self.trabajador )
+        self.importe_semanal = ISP
+        self.prestacion_economica = ISP * 6 if self.es_simple else ISP * 8
+        return super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        PrimeraLicenciaPosnatal.objects.filter(licencia_maternidad=self.licencia_maternidad).delete()
+        SegundaLicenciaPosnatal.objects.filter(licencia_maternidad=self.licencia_maternidad).delete()
+        PrestacionSocial.objects.filter(licencia_maternidad=self.licencia_maternidad).delete()
+        return super().delete(*args, **kwargs)
+
+
+class PrimeraLicenciaPosnatal(models.Model):
+    class Meta:
+        verbose_name = "Primera Licencia Posnatal"
+        verbose_name_plural = "Primeras Licencias Posnatal"
+
+    fecha_inicio = models.DateField(
+        verbose_name="Fecha Inicio", validators=[date_not_old_validation]
+    )
+    fecha_fin = models.DateField(
+        verbose_name="Fecha fin", validators=[date_not_old_validation]
+    )
+
+    # licencia_prenatal = models.OneToOneField(
+    #     LicenciaPrenatal,
+    #     on_delete=models.CASCADE,
+    #     verbose_name="Licencia Prenatal",
+    #
+    # )
+    prestacion_economica = models.FloatField(
+        verbose_name="Prestación Económica",
+        validators=[MinValueValidator(0)],
+
+    )
+    licencia_maternidad = models.OneToOneField(
+        LicenciaMaternidad,
+        on_delete=models.CASCADE,
+    )
 
     def clean(self):
         super().clean()
@@ -381,10 +493,199 @@ class CertificadoMaternidad(models.Model):
                     "La fecha de inicio debe ser inferior a la fecha de fin "
                 )
 
-    def __str__(self):
-        return (
-            f"{self.trabajador.nombre} {self.trabajador.apellidos} {self.fecha_inicio}"
+            if self.licencia_maternidad and self.licencia_maternidad.licenciaprenatal:
+                licencia_prenatal=self.licencia_maternidad.licenciaprenatal
+                #self.licencia_prenatal=self.licencia_maternidad.licenciaprenatal
+                if diferencia_menos_de_5_meses(
+                    licencia_prenatal.fecha_inicio, self.fecha_inicio
+                ):
+                    raise ValidationError(
+                        "Tiene que existir una distancia lógica entre ambas fechas"
+                    )
+
+    def save(self, *args, **kwargs):
+        es_nuevo = self.pk is None
+        fecha_de_inicio_del_embarazo = self.fecha_inicio
+        if self.licencia_maternidad:
+            licencia_prenatal=self.licencia_maternidad.licenciaprenatal
+            if licencia_prenatal:
+                ISP = (
+                    licencia_prenatal.importe_semanal
+                )  # calcular_ISP(fecha=fecha_de_inicio_del_embarazo,trabajador=self.licencia_prenatal.trabajador )
+
+                fecha_fin_del_embarazo_real = self.fecha_inicio
+                supuesta_fecha_fin_del_embarazo = licencia_prenatal.fecha_fin
+                diferencia = 0
+                if (
+                    fecha_fin_del_embarazo_real != supuesta_fecha_fin_del_embarazo
+                    and not misma_semana(
+                        fecha_fin_del_embarazo_real, supuesta_fecha_fin_del_embarazo
+                    )
+                ):
+                    cantidad_de_dias_de_diferencia = dias_entre_semana(
+                        fecha_fin_del_embarazo_real, supuesta_fecha_fin_del_embarazo
+                    )
+                    cantidad_de_semanas_laborables = veces_supera_siete(
+                        cantidad_de_dias_de_diferencia
+                    )
+                    se_adelanto = cantidad_de_dias_de_diferencia < 0
+                    diferencia = cantidad_de_semanas_laborables
+                    if se_adelanto:
+                        diferencia *= -1
+                self.prestacion_economica = (
+                    ISP * (6 + diferencia)
+                    if licencia_prenatal.es_simple
+                    else ISP * (8 + diferencia)
+                )
+        response = super().save(*args, **kwargs)
+        crear_SegundaLicenciaPosnatal(
+            self,
+            SegundaLicenciaPosnatal.objects.filter(
+                licencia_maternidad=self.licencia_maternidad
+            ).first()
+            if not es_nuevo
+            else None,
         )
+        return response
+
+    def delete(self, *args, **kwargs):
+        SegundaLicenciaPosnatal.objects.filter(licencia_maternidad=self.licencia_maternidad).delete()
+        PrestacionSocial.objects.filter(licencia_maternidad=self.licencia_maternidad).delete()
+        return super().delete(*args, **kwargs)
+
+class SegundaLicenciaPosnatal(models.Model):
+    class Meta:
+        verbose_name = "Segunda Licencia Posnatal"
+        verbose_name_plural = "Segundas Licencias Posnatal"
+
+    fecha_inicio = models.DateField(
+        verbose_name="Fecha Inicio", validators=[date_not_old_validation]
+    )
+    fecha_fin = models.DateField(
+        verbose_name="Fecha fin", validators=[date_not_old_validation]
+    )
+
+    # primera_licencia_posnatal = models.OneToOneField(
+    #     PrimeraLicenciaPosnatal,
+    #     on_delete=models.CASCADE,
+    #     verbose_name="Primera Licencia Posnatal",
+    #
+    # )
+    prestacion_economica = models.FloatField(
+        verbose_name="Prestación Económica",
+        validators=[MinValueValidator(0)],
+
+    )
+    licencia_maternidad = models.OneToOneField(
+        LicenciaMaternidad,
+        on_delete=models.CASCADE,
+    )
+
+    def clean(self):
+        super().clean()
+        if self.fecha_fin and self.fecha_inicio:
+            if self.fecha_fin <= self.fecha_inicio:
+                raise ValidationError(
+                    "La fecha de inicio debe ser inferior a la fecha de fin "
+                )
+
+    def save(self, *args, **kwargs):
+        es_nuevo = self.pk is None
+        if self.licencia_maternidad:
+            licencia_prenatal=self.licencia_maternidad.licenciaprenatal
+            if licencia_prenatal:
+                self.prestacion_economica = (
+                    licencia_prenatal.prestacion_economica
+                )
+        response = super().save(*args, **kwargs)
+
+        crear_PrestacionSocial(
+            self,
+            PrestacionSocial.objects.filter(licencia_maternidad=self.licencia_maternidad).first()
+            if not es_nuevo
+            else None,
+        )
+        return response
+
+
+def crear_SegundaLicenciaPosnatal(primera: PrimeraLicenciaPosnatal, segunda=None):
+    if not segunda:
+        segunda = SegundaLicenciaPosnatal()
+    segunda.fecha_inicio = siguiente_dia_laborable(primera.fecha_fin)
+    licencia_maternidad = primera.licencia_maternidad
+    if licencia_maternidad:
+        segunda.licencia_maternidad=licencia_maternidad
+        licencia_prenatal=licencia_maternidad.licenciaprenatal
+        if licencia_prenatal:
+            cantidad_semanas = 6 if licencia_prenatal.es_simple else 8
+            segunda.fecha_fin = segunda.fecha_inicio + timedelta(weeks=cantidad_semanas)
+    # segunda.primera_licencia_posnatal = primera
+    segunda.save()
+
+
+class PrestacionSocial(models.Model):
+    class Meta:
+        verbose_name = "Prestación Social"
+        verbose_name_plural = "Prestaciones Sociales"
+
+    fecha_inicio = models.DateField(
+        verbose_name="Fecha Inicio", validators=[date_not_old_validation]
+    )
+    fecha_fin = models.DateField(
+        verbose_name="Fecha fin", validators=[date_not_old_validation]
+    )
+
+    # segunda_licencia_posnatal = models.OneToOneField(
+    #     SegundaLicenciaPosnatal,
+    #     on_delete=models.CASCADE,
+    #     verbose_name="Segunda Licencia Posnatal",
+    #
+    # )
+    prestacion_economica = models.FloatField(
+        verbose_name="Prestación Económica",
+        validators=[MinValueValidator(0)],
+
+    )
+    licencia_maternidad = models.OneToOneField(
+        LicenciaMaternidad,
+        on_delete=models.CASCADE,
+    )
+
+    def clean(self):
+        super().clean()
+        if self.fecha_fin and self.fecha_inicio:
+            if self.fecha_fin <= self.fecha_inicio:
+                raise ValidationError(
+                    "La fecha de inicio debe ser inferior a la fecha de fin "
+                )
+
+    def save(self, *args, **kwargs):
+        cantidad_de_dias = dias_restantes_mes(self.fecha_inicio)
+        if self.licencia_maternidad:
+            licencia_prenatal=self.licencia_maternidad.licenciaprenatal
+            if licencia_prenatal:
+                SA = licencia_prenatal.salario_anual
+                PM = (SA / 12) * 60 / 100
+                self.prestacion_economica = 12 * PM
+                if not cantidad_de_dias > 24:
+                    PD = (PM / 24) * 60 / 100
+                    self.prestacion_economica += cantidad_de_dias * PD
+        return super().save(*args, **kwargs)
+
+
+def crear_PrestacionSocial(segunda: SegundaLicenciaPosnatal, prestacion=None):
+    if not prestacion:
+        prestacion = PrestacionSocial()
+    prestacion.fecha_inicio = siguiente_dia_laborable(segunda.fecha_fin)
+    licencia_maternidad=segunda.licencia_maternidad
+    if licencia_maternidad:
+        primera_licencia_posnatal=licencia_maternidad.primeralicenciaposnatal
+        if primera_licencia_posnatal:
+            prestacion.fecha_fin = primer_cumpleannos(
+                primera_licencia_posnatal.fecha_inicio
+            )
+        prestacion.licencia_maternidad=licencia_maternidad
+    prestacion.save()
 
 
 class PagoPorUtilidades(models.Model):
@@ -453,10 +754,7 @@ class SalarioMensualTotalPagado(models.Model):
     #     #ISP
     #     SA=SalarioMensualTotalPagado.calcular_salario_anual(year,trabajador)
     #     return SA/52
-
-    def calcular_pago_licencia_maternidad_base(
-        self, fecha, trabajador, es_simple: bool
-    ):
+    def calcular_ISP(self, fecha, trabajador):
         fecha_limite_inferior = fecha - timezone.timedelta(days=365)
         fecha_limite_inferior.replace(day=1)
         SA = (
@@ -467,23 +765,37 @@ class SalarioMensualTotalPagado(models.Model):
             .aggregate(total=Sum("salario_basico_mensual"))["total"]
         )
         ISP = SA / 52
-        Pres_Eco = ISP * 6 if es_simple else ISP * 8
-        return Pres_Eco
+        return ISP
+
+    # def calcular_pago_licencia_maternidad_base(
+    #     self, fecha, trabajador, es_simple: bool
+    # ):
+    #     ISP=self.calcular_ISP(fecha, trabajador)
+    #     Pres_Eco = ISP * 6 if es_simple else ISP * 8
+    #     return Pres_Eco
 
     def calcular_pago_licencia_prenatal(
         self, fecha_de_inicio_del_embarazo, trabajador, es_simple: bool
     ):
-        Pres_Eco = self.calcular_pago_licencia_maternidad_base(
-            fecha_de_inicio_del_embarazo, trabajador, es_simple
-        )
+        # Pres_Eco = self.calcular_pago_licencia_maternidad_base(
+        #     fecha_de_inicio_del_embarazo, trabajador, es_simple
+        # )
+        ISP = self.calcular_ISP(fecha_de_inicio_del_embarazo, trabajador)
+        Pres_Eco = ISP * 6 if es_simple else ISP * 8
         return Pres_Eco
 
     def calcular_pago_licencia_posnatal(
-        self, fecha_de_inicio_del_embarazo, trabajador, es_simple: bool
+        self,
+        fecha_de_inicio_del_embarazo,
+        fecha_fin__del_embarazo_real,
+        trabajador,
+        es_simple: bool,
     ):
-        Pres_Eco = self.calcular_pago_licencia_maternidad_base(
-            fecha_de_inicio_del_embarazo, trabajador, es_simple
-        )
+        # Pres_Eco = self.calcular_pago_licencia_maternidad_base(
+        #     fecha_de_inicio_del_embarazo, trabajador, es_simple
+        # )
+        ISP = self.calcular_ISP(fecha_de_inicio_del_embarazo, trabajador)
+        Pres_Eco = ISP * 6 if es_simple else ISP * 8
         return Pres_Eco
 
     def save(self, *args, **kwargs):
@@ -496,6 +808,21 @@ class SalarioMensualTotalPagado(models.Model):
 
     def __str__(self):
         return f"{self.trabajador.nombre} {self.trabajador.apellidos} {self.fecha}"
+
+
+def calcular_SA(fecha, trabajador):
+    fecha_limite_inferior = fecha - timezone.timedelta(days=365)
+    fecha_limite_inferior.replace(day=1)
+    SA = (
+        SalarioMensualTotalPagado.objects.filter(
+            fecha__gte=fecha_limite_inferior, trabajador=trabajador
+        )
+        .order_by("-fecha")[:12]
+        .aggregate(total=Sum("salario_basico_mensual"))["total"]
+    )
+    return SA
+    # ISP = SA / 52
+    # return ISP
 
 
 # class Cargo(models.Model):
