@@ -48,8 +48,10 @@ def create_fake_trabajadores(num_trabajadores=20):
         ]
         fechas_dias = []
         trabajadores=Trabajador.objects.all()
-        for trabajador in trabajadores:
-            ultimos_30_meses = get_first_day_of_last_30_months()
+        ultimos_30_meses = get_first_day_of_last_30_months()
+        for i,trabajador in enumerate(trabajadores):
+            if i>15:
+                break
             for fecha in ultimos_30_meses:
                 # print()
                 dias_de_este_mes = get_dias_laborales(fecha.year, fecha.month)
@@ -81,30 +83,30 @@ def create_fake_trabajadores(num_trabajadores=20):
         #         salario.trabajador=trabajador
         #         salario.save()
         #
-        # for i,trabajador in enumerate(trabajadores):
-        #     if i<10:
-        #         licencia_maternidad=LicenciaMaternidad()
-        #         licencia_maternidad.trabajador=trabajador
-        #         mes=24+random.randint(1, 5)
-        #         # print(f"mes {mes}")
-        #         # print(ultimos_30_meses)
-        #         fecha_inicio=ultimos_30_meses[mes]
-        #         # print(f"fecha_incio {fecha_inicio}")
-        #         licencia_maternidad.fecha_inicio=fecha_inicio
-        #         licencia_maternidad.save()
-        #         licencia_prenatal=LicenciaPrenatal()
-        #         licencia_prenatal.licencia_maternidad=licencia_maternidad
-        #         licencia_prenatal.fecha_inicio=fecha_inicio
-        #         licencia_prenatal.fecha_fin=fecha_inicio + timedelta(weeks=48)
-        #         licencia_prenatal.trabajador=trabajador
-        #         licencia_prenatal.save()
-        #         if random.randint(1,3)==2:
-        #
-        #             primera=PrimeraLicenciaPosnatal()
-        #             primera.licencia_maternidad=licencia_maternidad
-        #             primera.fecha_inicio=fecha_inicio + timedelta(weeks=45)
-        #             primera.fecha_fin=primera.fecha_inicio + timedelta(weeks=6)
-        #             primera.save()
+        for i,trabajador in enumerate(trabajadores):
+            if i<5:
+                licencia_maternidad=LicenciaMaternidad()
+                licencia_maternidad.trabajador=trabajador
+                mes=24+random.randint(1, 5)
+                # print(f"mes {mes}")
+                # print(ultimos_30_meses)
+                fecha_inicio=ultimos_30_meses[mes]
+                # print(f"fecha_incio {fecha_inicio}")
+                licencia_maternidad.fecha_inicio=fecha_inicio
+                licencia_maternidad.save()
+                licencia_prenatal=LicenciaPrenatal()
+                licencia_prenatal.licencia_maternidad=licencia_maternidad
+                licencia_prenatal.fecha_inicio=fecha_inicio
+                licencia_prenatal.fecha_fin=fecha_inicio + timedelta(weeks=48)
+                licencia_prenatal.trabajador=trabajador
+                licencia_prenatal.save()
+                if random.randint(1,3)==2:
+
+                    primera=PrimeraLicenciaPosnatal()
+                    primera.licencia_maternidad=licencia_maternidad
+                    primera.fecha_inicio=fecha_inicio + timedelta(weeks=45)
+                    primera.fecha_fin=primera.fecha_inicio + timedelta(weeks=6)
+                    primera.save()
 
 
 

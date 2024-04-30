@@ -97,7 +97,7 @@ class LicenciaMaternidadAdmin(admin.ModelAdmin):
         "view_primera_licencia_posnatal",
     )
     search_fields = (
-        "trabajador",
+        #"trabajador",
         "fecha_inicio",
     )
     list_filter = (
