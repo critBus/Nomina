@@ -204,29 +204,44 @@ class categoria_ocupacional_Filter(admin.SimpleListFilter):
 class SalarioEscalaAdmin(admin.ModelAdmin):
     list_display = ("grupo_complejidad",
                     "grupo_escala",
-                    "rango_salarial",
-                    "salario",
-                    "view_categoria_ocupacional"
+                    #"rango_salarial",
+                    # "salario",
+                    "view_categoria_ocupacional",
+                    "rango_salarial_1",
+                    "rango_salarial_2",
+                    "rango_salarial_3",
+                    "rango_salarial_4",
+                    "rango_salarial_5",
                     #"categoria_ocupacional",
                     )
     search_fields = (
         "grupo_complejidad",
         "grupo_escala",
-        "rango_salarial",
-        "salario",
+        # "rango_salarial",
+        # "salario",
+        "rango_salarial_1",
+        "rango_salarial_2",
+        "rango_salarial_3",
+        "rango_salarial_4",
+        "rango_salarial_5",
         #"categoria_ocupacional",
     )
     list_filter = (
         "grupo_complejidad",
         "grupo_escala",
-        "rango_salarial",
+        # "rango_salarial",
         categoria_ocupacional_Filter,
     )
     ordering = (
         "grupo_complejidad",
         "grupo_escala",
-        "rango_salarial",
-        "salario",
+        # "rango_salarial",
+        # "salario",
+        "rango_salarial_1",
+        "rango_salarial_2",
+        "rango_salarial_3",
+        "rango_salarial_4",
+        "rango_salarial_5",
         #"categoria_ocupacional",
     )
 
@@ -333,6 +348,7 @@ class AsistenciaAdmin(admin.ModelAdmin):
     list_filter = (
         "horas_trabajadas",
         "trabajador",
+        "fecha",
     )
     ordering = (
         "fecha",

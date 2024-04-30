@@ -6,14 +6,15 @@ from django.db import models
 from django.db.models import Sum
 from django.utils import timezone
 
-from apps.nomina.utils.util_maternidad import (
-    dias_entre_semana,
+# from apps.nomina.utils.util import es_dia_feriado, get_dias_feriado
+from apps.nomina.utils.util_salario import (
+    get_dias_entre_semana,
     veces_supera_siete,
     misma_semana,
     dias_restantes_mes,
     siguiente_dia_laborable,
     primer_cumpleannos,
-    diferencia_menos_de_5_meses,
+    diferencia_menos_de_5_meses, nombre_dia_semana, es_viernes, get_dias_feriado,
 )
 
 
@@ -191,19 +192,45 @@ class SalarioEscala(models.Model):
             ),
         ],
     )
-    rango_salarial = models.IntegerField(
-        choices=(
-            (1, "Rango Salarial 1"),
-            (2, "Rango Salarial 2"),
-            (3, "Rango Salarial 3"),
-            (4, "Rango Salarial 4"),
-            (5, "Rango Salarial 5"),
-        )
-    )
 
-    salario = models.FloatField(
-        verbose_name="Salario", validators=[MinValueValidator(0)]
+    rango_salarial_1 = models.IntegerField(
+        verbose_name="I",#"Rango Salarial 1",
+        default=0,
+        validators=[MinValueValidator(0), ],
     )
+    rango_salarial_2 = models.IntegerField(
+        verbose_name="II",#"Rango Salarial 2",
+        default=0,
+        validators=[MinValueValidator(0), ],
+    )
+    rango_salarial_3 = models.IntegerField(
+        verbose_name="III",#"Rango Salarial 3",
+        default=0,
+        validators=[MinValueValidator(0), ],
+    )
+    rango_salarial_4 = models.IntegerField(
+        verbose_name="IV",#"Rango Salarial 4",
+        default=0,
+        validators=[MinValueValidator(0), ],
+    )
+    rango_salarial_5 = models.IntegerField(
+        verbose_name="V",#"Rango Salarial 5",
+        default=0,
+        validators=[MinValueValidator(0), ],
+    )
+    # rango_salarial = models.IntegerField(
+    #     choices=(
+    #         (1, "Rango Salarial 1"),
+    #         (2, "Rango Salarial 2"),
+    #         (3, "Rango Salarial 3"),
+    #         (4, "Rango Salarial 4"),
+    #         (5, "Rango Salarial 5"),
+    #     )
+    # )
+
+    # salario = models.FloatField(
+    #     verbose_name="Salario", validators=[MinValueValidator(0)]
+    # )
 
     @property
     def categoria_ocupacional(self):
@@ -220,7 +247,7 @@ class SalarioEscala(models.Model):
         return "Técnicos gestores actividades principales"
 
     def __str__(self):
-        return f"{self.grupo_complejidad} {self.grupo_escala} {self.rango_salarial} {self.salario}"
+        return f"{self.grupo_complejidad} {self.grupo_escala} "
 
 
 class Trabajador(models.Model):
@@ -324,10 +351,14 @@ class Asistencia(models.Model):
     trabajador = models.ForeignKey(
         Trabajador, on_delete=models.CASCADE, verbose_name="Trabajador"
     )
+    # es_feriado = models.BooleanField(verbose_name="Feriado",default=False)
 
     def __str__(self):
         return f"{self.trabajador.nombre} {self.trabajador.apellidos} {self.fecha}"
 
+    # def save(self, *args, **kwargs):
+    #     self.es_feriado=es_dia_feriado(self.fecha)
+    #     return super().save(*args, **kwargs)
 
 class CertificadoMedico(models.Model):
     class Meta:
@@ -428,10 +459,10 @@ class LicenciaPrenatal(models.Model):
                 raise ValidationError(
                     "La fecha de inicio debe ser inferior a la fecha de fin "
                 )
-            if diferencia_menos_de_5_meses(self.fecha_inicio, self.fecha_fin):
-                raise ValidationError(
-                    "Tiene que existir una distancia lógica entre ambas fechas"
-                )
+            # if diferencia_menos_de_5_meses(self.fecha_inicio, self.fecha_fin):
+            #     raise ValidationError(
+            #         "Tiene que existir una distancia lógica entre ambas fechas"
+            #     )
 
     def __str__(self):
         return (
@@ -439,6 +470,7 @@ class LicenciaPrenatal(models.Model):
         )
 
     def save(self, *args, **kwargs):
+        #nombre_dia_semana(self.fecha_inicio)
         fecha_de_inicio_del_embarazo = self.fecha_inicio
         self.salario_anual = calcular_SA(
             fecha=fecha_de_inicio_del_embarazo, trabajador=self.trabajador
@@ -451,6 +483,7 @@ class LicenciaPrenatal(models.Model):
         return super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
+
         PrimeraLicenciaPosnatal.objects.filter(licencia_maternidad=self.licencia_maternidad).delete()
         SegundaLicenciaPosnatal.objects.filter(licencia_maternidad=self.licencia_maternidad).delete()
         PrestacionSocial.objects.filter(licencia_maternidad=self.licencia_maternidad).delete()
@@ -493,15 +526,15 @@ class PrimeraLicenciaPosnatal(models.Model):
                     "La fecha de inicio debe ser inferior a la fecha de fin "
                 )
 
-            if self.licencia_maternidad and self.licencia_maternidad.licenciaprenatal:
-                licencia_prenatal=self.licencia_maternidad.licenciaprenatal
-                #self.licencia_prenatal=self.licencia_maternidad.licenciaprenatal
-                if diferencia_menos_de_5_meses(
-                    licencia_prenatal.fecha_inicio, self.fecha_inicio
-                ):
-                    raise ValidationError(
-                        "Tiene que existir una distancia lógica entre ambas fechas"
-                    )
+            # if self.licencia_maternidad and self.licencia_maternidad.licenciaprenatal:
+            #     licencia_prenatal=self.licencia_maternidad.licenciaprenatal
+            #     #self.licencia_prenatal=self.licencia_maternidad.licenciaprenatal
+            #     if diferencia_menos_de_5_meses(
+            #         licencia_prenatal.fecha_inicio, self.fecha_inicio
+            #     ):
+            #         raise ValidationError(
+            #             "Tiene que existir una distancia lógica entre ambas fechas"
+            #         )
 
     def save(self, *args, **kwargs):
         es_nuevo = self.pk is None
@@ -522,7 +555,7 @@ class PrimeraLicenciaPosnatal(models.Model):
                         fecha_fin_del_embarazo_real, supuesta_fecha_fin_del_embarazo
                     )
                 ):
-                    cantidad_de_dias_de_diferencia = dias_entre_semana(
+                    cantidad_de_dias_de_diferencia = get_dias_entre_semana(
                         fecha_fin_del_embarazo_real, supuesta_fecha_fin_del_embarazo
                     )
                     cantidad_de_semanas_laborables = veces_supera_siete(
@@ -552,6 +585,9 @@ class PrimeraLicenciaPosnatal(models.Model):
         SegundaLicenciaPosnatal.objects.filter(licencia_maternidad=self.licencia_maternidad).delete()
         PrestacionSocial.objects.filter(licencia_maternidad=self.licencia_maternidad).delete()
         return super().delete(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.licencia_maternidad.trabajador.nombre}"
 
 class SegundaLicenciaPosnatal(models.Model):
     class Meta:
@@ -606,6 +642,8 @@ class SegundaLicenciaPosnatal(models.Model):
             else None,
         )
         return response
+    def __str__(self):
+        return f"{self.licencia_maternidad.trabajador.nombre}"
 
 
 def crear_SegundaLicenciaPosnatal(primera: PrimeraLicenciaPosnatal, segunda=None):
@@ -672,6 +710,9 @@ class PrestacionSocial(models.Model):
                     self.prestacion_economica += cantidad_de_dias * PD
         return super().save(*args, **kwargs)
 
+    def __str__(self):
+        return f"{self.licencia_maternidad.trabajador.nombre}"
+
 
 def crear_PrestacionSocial(segunda: SegundaLicenciaPosnatal, prestacion=None):
     if not prestacion:
@@ -709,6 +750,28 @@ class PagoPorSubsidios(models.Model):
 
 
 class SalarioMensualTotalPagado(models.Model):
+    EVALUACIONES=[
+            (
+                "D",
+                "Deficiente",
+            ),
+            (
+                "R",
+                "Regular",
+            ),
+            (
+                "B",
+                "Bien",
+            ),
+            (
+                "MB",
+                "Muy Bien",
+            ),
+            (
+                "E",
+                "Excelente",
+            ),
+        ]
     fecha = models.DateField(verbose_name="Fecha", default=timezone.now)
     trabajador = models.ForeignKey(
         Trabajador, on_delete=models.CASCADE, verbose_name="Trabajador"
@@ -718,6 +781,11 @@ class SalarioMensualTotalPagado(models.Model):
     )
     salario_basico_mensual = models.FloatField(
         verbose_name="Salario Basico Mensual", validators=[MinValueValidator(0)]
+    )
+    evaluacion_obtenida_por_el_jefe=models.CharField(
+        verbose_name="Evaluación",
+        max_length=256,
+        choices=EVALUACIONES,
     )
     pago_por_utilidades = models.ForeignKey(
         PagoPorUtilidades,
@@ -735,71 +803,94 @@ class SalarioMensualTotalPagado(models.Model):
         blank=True,
     )
 
-    def actualizar_salario_devengado(self):
-        self.salario_devengado_mensual = self.salario_basico_mensual
+    evaluacion_obtenida_por_el_jefe_en_puntos = models.IntegerField(
+        verbose_name="Puntos", validators=[MinValueValidator(0)]
+    )
+    def get_evalucacion_str(self):
+        for evaluacion in self.EVALUACIONES:
+            if self.evaluacion_obtenida_por_el_jefe ==evaluacion[0]:
+                return evaluacion[1]
+        return ""
+    def clean(self):
+        super().clean()
+        evaluacion = self.evaluacion_obtenida_por_el_jefe
+        puntos=self.evaluacion_obtenida_por_el_jefe_en_puntos
+        mensaje="Los puntos no son correctos"
+        if evaluacion == "D":
+            if puntos>60:
+                raise ValidationError(
+                    mensaje
+                )
+        elif evaluacion == "R":
+            if puntos < 60 or puntos >79:
+                raise ValidationError(
+                    mensaje
+                )
+        elif evaluacion == "B":
+            if puntos < 80 or puntos > 89:
+                raise ValidationError(
+                    mensaje
+                )
+        elif evaluacion == "MB":
+            if puntos < 90 or puntos > 96:
+                raise ValidationError(
+                    mensaje
+                )
+        elif evaluacion == "E":
+            if puntos < 97:
+                raise ValidationError(
+                    mensaje
+                )
+
+    def calcular_cantidad_de_horas_trabajadas_este_mes(self):
+        asistencias=Asistencia.objects.filter(
+            fecha__year=self.fecha.year,
+            fecha__month=self.fecha.month
+        )
+
+        suma=0
+        for asistencia in asistencias:
+            suma+=asistencia.horas_trabajadas
+        # print(suma)
+        dias_feriados=get_dias_feriado(self.fecha.month)
+        if dias_feriados:
+            SDSA = calcular_SDSA(self.fecha, self.trabajador)
+            for dia in dias_feriados:
+                #es_viernes=self.fecha.replace(day=dia).weekday()==4
+                viernes=es_viernes(self.fecha.replace(day=dia))
+                # print(f"SDSA {SDSA}")
+                suma +=len(dias_feriados)*(8 if not viernes else 9)*SDSA
+        return suma
+    def actualizar_salario(self):
+        evaluacion=self.evaluacion_obtenida_por_el_jefe#self.trabajador.salario_escala
+        salario_escala=self.trabajador.salario_escala
+        if evaluacion == "D":
+            salario_basico_seleccionado=salario_escala.rango_salarial_1
+        elif evaluacion == "R":
+            salario_basico_seleccionado=salario_escala.rango_salarial_2
+        elif evaluacion == "B":
+            salario_basico_seleccionado=salario_escala.rango_salarial_3
+        elif evaluacion == "MB":
+            salario_basico_seleccionado=salario_escala.rango_salarial_4
+        elif evaluacion == "E":
+            salario_basico_seleccionado=salario_escala.rango_salarial_5
+        else:
+            salario_basico_seleccionado=0
+
+        self.salario_basico_mensual=salario_basico_seleccionado
+
+        self.salario_devengado_mensual = salario_basico_seleccionado
+        self.salario_devengado_mensual*= self.evaluacion_obtenida_por_el_jefe_en_puntos / 100
+        self.salario_devengado_mensual /=  190.6
+        self.salario_devengado_mensual*=self.calcular_cantidad_de_horas_trabajadas_este_mes()
         if self.pago_por_utilidades:
             self.salario_devengado_mensual -= self.pago_por_utilidades.pago
         if self.pago_por_subsidios:
             self.salario_devengado_mensual -= self.pago_por_subsidios.pago
 
-    # @staticmethod
-    # def calcular_salario_anual(year,trabajador):
-    #     #SA
-    #     return SalarioMensualTotalPagado.objects.filter(
-    #         fecha__year=year,trabajador=trabajador
-    #     ).aggregate(total=Sum('salario_basico_mensual'))['total']
-    #
-    # @staticmethod
-    # def calcular_importe_semanal(year,trabajador):
-    #     #ISP
-    #     SA=SalarioMensualTotalPagado.calcular_salario_anual(year,trabajador)
-    #     return SA/52
-    def calcular_ISP(self, fecha, trabajador):
-        fecha_limite_inferior = fecha - timezone.timedelta(days=365)
-        fecha_limite_inferior.replace(day=1)
-        SA = (
-            SalarioMensualTotalPagado.objects.filter(
-                fecha__gte=fecha_limite_inferior, trabajador=trabajador
-            )
-            .order_by("-fecha")[:12]
-            .aggregate(total=Sum("salario_basico_mensual"))["total"]
-        )
-        ISP = SA / 52
-        return ISP
-
-    # def calcular_pago_licencia_maternidad_base(
-    #     self, fecha, trabajador, es_simple: bool
-    # ):
-    #     ISP=self.calcular_ISP(fecha, trabajador)
-    #     Pres_Eco = ISP * 6 if es_simple else ISP * 8
-    #     return Pres_Eco
-
-    def calcular_pago_licencia_prenatal(
-        self, fecha_de_inicio_del_embarazo, trabajador, es_simple: bool
-    ):
-        # Pres_Eco = self.calcular_pago_licencia_maternidad_base(
-        #     fecha_de_inicio_del_embarazo, trabajador, es_simple
-        # )
-        ISP = self.calcular_ISP(fecha_de_inicio_del_embarazo, trabajador)
-        Pres_Eco = ISP * 6 if es_simple else ISP * 8
-        return Pres_Eco
-
-    def calcular_pago_licencia_posnatal(
-        self,
-        fecha_de_inicio_del_embarazo,
-        fecha_fin__del_embarazo_real,
-        trabajador,
-        es_simple: bool,
-    ):
-        # Pres_Eco = self.calcular_pago_licencia_maternidad_base(
-        #     fecha_de_inicio_del_embarazo, trabajador, es_simple
-        # )
-        ISP = self.calcular_ISP(fecha_de_inicio_del_embarazo, trabajador)
-        Pres_Eco = ISP * 6 if es_simple else ISP * 8
-        return Pres_Eco
 
     def save(self, *args, **kwargs):
-        self.actualizar_salario_devengado()
+        self.actualizar_salario()
         return super().save(*args, **kwargs)
 
     # @staticmethod
@@ -809,21 +900,22 @@ class SalarioMensualTotalPagado(models.Model):
     def __str__(self):
         return f"{self.trabajador.nombre} {self.trabajador.apellidos} {self.fecha}"
 
-
-def calcular_SA(fecha, trabajador):
+def calcular_promedio_salario(fecha, trabajador, cantidad_de_meses):
     fecha_limite_inferior = fecha - timezone.timedelta(days=365)
     fecha_limite_inferior.replace(day=1)
     SA = (
         SalarioMensualTotalPagado.objects.filter(
             fecha__gte=fecha_limite_inferior, trabajador=trabajador
         )
-        .order_by("-fecha")[:12]
-        .aggregate(total=Sum("salario_basico_mensual"))["total"]
+        .order_by("-fecha")[:cantidad_de_meses]
+        .aggregate(total=Sum("salario_devengado_mensual"))["total"]
     )
-    return SA
-    # ISP = SA / 52
-    # return ISP
+    return SA if SA else 0
+def calcular_SA(fecha, trabajador):
+    return calcular_promedio_salario(fecha, trabajador, 12)
 
+def calcular_SDSA(fecha, trabajador):
+    return calcular_promedio_salario(fecha, trabajador, 6)
 
 # class Cargo(models.Model):
 #     class Meta:

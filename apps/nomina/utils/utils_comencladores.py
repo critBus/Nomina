@@ -112,18 +112,24 @@ def crear_salarios_escalas_default():
         return respuesta
 
     def crear_salarios_escalas(
-        grupo_complejidad, rango_salarial, grupo_escala, salario
+        grupo_complejidad,
+            #rango_salarial,
+            grupo_escala,
+            lista_salarios,# grupo_escala, salario
     ):
         if not SalarioEscala.objects.filter(
             grupo_complejidad=grupo_complejidad,
             grupo_escala=grupo_escala,
-            rango_salarial=rango_salarial,
+            #rango_salarial=rango_salarial,
         ).exists():
             salario_escala = SalarioEscala()
             salario_escala.grupo_complejidad = grupo_complejidad
             salario_escala.grupo_escala = grupo_escala
-            salario_escala.rango_salarial = rango_salarial
-            salario_escala.salario = salario
+            salario_escala.rango_salarial_1 = lista_salarios[0]
+            salario_escala.rango_salarial_2 = lista_salarios[1]
+            salario_escala.rango_salarial_3 = lista_salarios[2]
+            salario_escala.rango_salarial_4 = lista_salarios[3]
+            salario_escala.rango_salarial_5 = lista_salarios[4]
             salario_escala.save()
 
     for complejidad, rangos in grupos_complejidad:
@@ -133,9 +139,14 @@ def crear_salarios_escalas_default():
 
         for i, v in enumerate(datos_actuales):
             grupo_escala = v[0]
-            for j, salario in enumerate(v[1]):
-                grupo_complejidad = complejidad
-                rango_salarial = j + 1
-                crear_salarios_escalas(
-                    grupo_complejidad, rango_salarial, grupo_escala, salario
-                )
+
+            crear_salarios_escalas(
+                complejidad, grupo_escala, v[1]
+            )
+
+            # for j, salario in enumerate(v[1]):
+            #     grupo_complejidad = complejidad
+            #     rango_salarial = j + 1
+            #     crear_salarios_escalas(
+            #         grupo_complejidad, rango_salarial, grupo_escala, salario
+            #     )
