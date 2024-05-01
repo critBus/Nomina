@@ -160,3 +160,6 @@ static
 myprojectenv/
 db.sqlite3
 *.sqlite3
+*.cpython-311
+__pycache__/
+__pycache__

@@ -139,7 +139,7 @@ def nombre_dia_semana(fecha):
     except ValueError:
         print("Formato de fecha incorrecto. Debe ser en el formato YYYY-MM-DD.")
 
-def get_first_day_of_last_30_months():
+def get_first_day_of_last_months(cantidad_de_meses):
 
     """
     Devuelve una lista con el primer día de cada mes de los últimos 30 meses.
@@ -160,3 +160,6 @@ def get_first_day_of_last_30_months():
         first_days.append(first_day)
 
     return first_days
+
+def get_first_day_of_last_30_months():
+    return get_first_day_of_last_months(30)

@@ -9,6 +9,7 @@ from django.utils import timezone
 # from apps.nomina.utils.util import es_dia_feriado, get_dias_feriado
 from apps.nomina.utils.util_salario import (
     get_dias_entre_semana,
+    get_first_day_of_last_months,
     veces_supera_siete,
     misma_semana,
     dias_restantes_mes,
@@ -814,43 +815,18 @@ class SalarioMensualTotalPagado(models.Model):
     evaluacion_obtenida_por_el_jefe_en_puntos = models.IntegerField(
         verbose_name="Puntos", validators=[MinValueValidator(0)]
     )
+    horas_trabajadas=models.IntegerField(
+        verbose_name="Horas Trabajadas", validators=[MinValueValidator(0)]
+    )
     def get_evalucacion_str(self):
         for evaluacion in self.EVALUACIONES:
             if self.evaluacion_obtenida_por_el_jefe ==evaluacion[0]:
                 return evaluacion[1]
         return ""
-    # def clean(self):
-    #     super().clean()
-    #     evaluacion = self.evaluacion_obtenida_por_el_jefe
-    #     puntos=self.evaluacion_obtenida_por_el_jefe_en_puntos
-    #     mensaje="Los puntos no son correctos"
-        # if evaluacion == "D":
-        #     if puntos>60:
-        #         raise ValidationError(
-        #             mensaje
-        #         )
-        # elif evaluacion == "R":
-        #     if puntos < 60 or puntos >79:
-        #         raise ValidationError(
-        #             mensaje
-        #         )
-        # elif evaluacion == "B":
-        #     if puntos < 80 or puntos > 89:
-        #         raise ValidationError(
-        #             mensaje
-        #         )
-        # elif evaluacion == "MB":
-        #     if puntos < 90 or puntos > 96:
-        #         raise ValidationError(
-        #             mensaje
-        #         )
-        # elif evaluacion == "E":
-        #     if puntos < 97:
-        #         raise ValidationError(
-        #             mensaje
-        #         )
+    
 
     def calcular_cantidad_de_horas_trabajadas_este_mes(self):
+        # return calcular_cantidad_de_horas_trabajadas_por_mes(self.fecha)
         asistencias=Asistencia.objects.filter(
             fecha__year=self.fecha.year,
             fecha__month=self.fecha.month
@@ -860,13 +836,26 @@ class SalarioMensualTotalPagado(models.Model):
         for asistencia in asistencias:
             suma+=asistencia.horas_trabajadas
         # print(suma)
+        
+        return suma
+    def calcular_pago_cantidad_de_horas_trabajadas_este_mes_feriados(self):
+        
+
+        suma=0
+        
+        # print(suma)
         dias_feriados=get_dias_feriado(self.fecha.month)
         if dias_feriados:
             SDSA = calcular_SDSA(self.fecha, self.trabajador)
+            cantidad_de_horas_trabajadas_en_los_6_meses=calcular_cantidad_de_horas_trabajadas_de_los_ultimos(self.trabajador,6)
+
+            TH=SDSA/cantidad_de_horas_trabajadas_en_los_6_meses
             for dia in dias_feriados:
                 viernes=es_viernes(self.fecha.replace(day=dia))
                 # print(f"SDSA {SDSA}")
-                suma +=len(dias_feriados)*(9 if not viernes else 8)*SDSA
+                suma +=len(dias_feriados)*(9 if not viernes else 8)
+
+            suma*=TH
         return suma
     def actualizar_salario(self):
         puntos=self.evaluacion_obtenida_por_el_jefe_en_puntos
@@ -896,17 +885,22 @@ class SalarioMensualTotalPagado(models.Model):
             salario_basico_seleccionado=0
 
         self.salario_basico_mensual=salario_basico_seleccionado
+        self.horas_trabajadas=self.calcular_cantidad_de_horas_trabajadas_este_mes()
 
         self.salario_devengado_mensual = salario_basico_seleccionado
-        self.salario_devengado_mensual*= self.evaluacion_obtenida_por_el_jefe_en_puntos / 100
+        # self.salario_devengado_mensual*= self.evaluacion_obtenida_por_el_jefe_en_puntos / 100
         self.salario_devengado_mensual /=  190.6
         a_float=float(self.salario_devengado_mensual)
-        resultado=a_float*float(self.calcular_cantidad_de_horas_trabajadas_este_mes())
+        resultado=a_float*float(self.horas_trabajadas)
         self.salario_devengado_mensual=resultado
         if self.pago_por_utilidades:
             self.salario_devengado_mensual -= self.pago_por_utilidades.pago
         if self.pago_por_subsidios:
             self.salario_devengado_mensual -= self.pago_por_subsidios.pago
+        
+        a_float=float(self.salario_devengado_mensual)
+        resultado=a_float*float(self.calcular_pago_cantidad_de_horas_trabajadas_este_mes_feriados())
+        self.salario_devengado_mensual+=resultado
 
 
     def save(self, *args, **kwargs):
@@ -920,22 +914,66 @@ class SalarioMensualTotalPagado(models.Model):
     def __str__(self):
         return f"{self.trabajador.nombre} {self.trabajador.apellidos} {self.fecha}"
 
-def calcular_promedio_salario(fecha, trabajador, cantidad_de_meses):
-    fecha_limite_inferior = fecha - timezone.timedelta(days=365)
-    fecha_limite_inferior.replace(day=1)
+def calcular_cantidad_de_horas_trabajadas_por_mes(fecha):
+    salario= SalarioMensualTotalPagado.objects.filter(
+        fecha__year=fecha.year,
+        fecha__month=fecha.month
+    ).first()
+    if salario:
+        return salario.horas_trabajadas
+    return 0
+
+    
+    
+    
+def calcular_cantidad_de_horas_trabajadas_por_mes_calculo_bruto(fecha):
+    asistencias=Asistencia.objects.filter(
+        fecha__year=fecha.year,
+        fecha__month=fecha.month
+    )
+
+    suma=0
+    for asistencia in asistencias:
+        suma+=asistencia.horas_trabajadas
+    # print(suma)
+    
+    return suma
+def calcular_cantidad_de_horas_trabajadas_de_los_ultimos_calculo_bruto(cantidad_meses):
+    primeros_dias_del_mes=get_first_day_of_last_months(cantidad_meses)
+    suma=0
+    for fecha in primeros_dias_del_mes:
+        suma+=calcular_cantidad_de_horas_trabajadas_por_mes(fecha)
+    return suma
+def calcular_cantidad_de_horas_trabajadas_de_los_ultimos(trabajador, cantidad_de_meses):
+    # fecha_limite_inferior = fecha - timezone.timedelta(days=365)
+    # fecha_limite_inferior.replace(day=1)
+    TH = (
+        SalarioMensualTotalPagado.objects.filter(
+            #fecha__gte=fecha_limite_inferior, 
+            trabajador=trabajador
+        )
+        .order_by("-fecha")[:cantidad_de_meses]
+        .aggregate(total=Sum("horas_trabajadas"))["total"]
+    )
+    return TH if TH else 0
+def calcular_suma_salario(fecha, trabajador, cantidad_de_meses):
+    # fecha_limite_inferior = fecha - timezone.timedelta(days=365)
+    # fecha_limite_inferior.replace(day=1)
     SA = (
         SalarioMensualTotalPagado.objects.filter(
-            fecha__gte=fecha_limite_inferior, trabajador=trabajador
+            # fecha__gte=fecha_limite_inferior, 
+            fecha__lte=fecha, 
+            trabajador=trabajador
         )
         .order_by("-fecha")[:cantidad_de_meses]
         .aggregate(total=Sum("salario_devengado_mensual"))["total"]
     )
     return SA if SA else 0
 def calcular_SA(fecha, trabajador):
-    return calcular_promedio_salario(fecha, trabajador, 12)
+    return calcular_suma_salario(fecha, trabajador, 12)
 
 def calcular_SDSA(fecha, trabajador):
-    return calcular_promedio_salario(fecha, trabajador, 6)
+    return calcular_suma_salario(fecha, trabajador, 6)
 
 # class Cargo(models.Model):
 #     class Meta:
