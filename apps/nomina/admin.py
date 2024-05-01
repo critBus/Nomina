@@ -381,7 +381,7 @@ class CertificadoMedicoAdmin(admin.ModelAdmin):
 
 @admin.register(SalarioMensualTotalPagado)
 class SalarioMensualTotalPagadoAdmin(admin.ModelAdmin):
-    readonly_fields = ("salario_devengado_mensual","salario_basico_mensual","evaluacion_obtenida_por_el_jefe",)
+    readonly_fields = ("salario_devengado_mensual","salario_basico_mensual","evaluacion_obtenida_por_el_jefe","horas_trabajadas","pago_por_dias_feriados",)
     list_display = ("fecha","trabajador", "salario_devengado_mensual", "evaluacion_obtenida_por_el_jefe","evaluacion_obtenida_por_el_jefe_en_puntos")
     search_fields = (
         "fecha","trabajador__nombre", "salario_devengado_mensual", "evaluacion_obtenida_por_el_jefe","evaluacion_obtenida_por_el_jefe_en_puntos"
