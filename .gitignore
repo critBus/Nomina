@@ -159,3 +159,4 @@ static
 .env.dev
 myprojectenv/
 db.sqlite3
+*.sqlite3
