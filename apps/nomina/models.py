@@ -381,6 +381,9 @@ class CertificadoMedico(models.Model):
     trabajador = models.ForeignKey(
         Trabajador, on_delete=models.CASCADE, verbose_name="Trabajador"
     )
+    prestacion_economica = models.DecimalField(decimal_places=2, max_digits=15,
+                                               verbose_name="Prestación Económica", validators=[MinValueValidator(0)]
+                                               )
 
     def clean(self):
         super().clean()
@@ -816,36 +819,36 @@ class SalarioMensualTotalPagado(models.Model):
             if self.evaluacion_obtenida_por_el_jefe ==evaluacion[0]:
                 return evaluacion[1]
         return ""
-    def clean(self):
-        super().clean()
-        evaluacion = self.evaluacion_obtenida_por_el_jefe
-        puntos=self.evaluacion_obtenida_por_el_jefe_en_puntos
-        mensaje="Los puntos no son correctos"
-        if evaluacion == "D":
-            if puntos>60:
-                raise ValidationError(
-                    mensaje
-                )
-        elif evaluacion == "R":
-            if puntos < 60 or puntos >79:
-                raise ValidationError(
-                    mensaje
-                )
-        elif evaluacion == "B":
-            if puntos < 80 or puntos > 89:
-                raise ValidationError(
-                    mensaje
-                )
-        elif evaluacion == "MB":
-            if puntos < 90 or puntos > 96:
-                raise ValidationError(
-                    mensaje
-                )
-        elif evaluacion == "E":
-            if puntos < 97:
-                raise ValidationError(
-                    mensaje
-                )
+    # def clean(self):
+    #     super().clean()
+    #     evaluacion = self.evaluacion_obtenida_por_el_jefe
+    #     puntos=self.evaluacion_obtenida_por_el_jefe_en_puntos
+    #     mensaje="Los puntos no son correctos"
+        # if evaluacion == "D":
+        #     if puntos>60:
+        #         raise ValidationError(
+        #             mensaje
+        #         )
+        # elif evaluacion == "R":
+        #     if puntos < 60 or puntos >79:
+        #         raise ValidationError(
+        #             mensaje
+        #         )
+        # elif evaluacion == "B":
+        #     if puntos < 80 or puntos > 89:
+        #         raise ValidationError(
+        #             mensaje
+        #         )
+        # elif evaluacion == "MB":
+        #     if puntos < 90 or puntos > 96:
+        #         raise ValidationError(
+        #             mensaje
+        #         )
+        # elif evaluacion == "E":
+        #     if puntos < 97:
+        #         raise ValidationError(
+        #             mensaje
+        #         )
 
     def calcular_cantidad_de_horas_trabajadas_este_mes(self):
         asistencias=Asistencia.objects.filter(
@@ -866,7 +869,18 @@ class SalarioMensualTotalPagado(models.Model):
                 suma +=len(dias_feriados)*(9 if not viernes else 8)*SDSA
         return suma
     def actualizar_salario(self):
-        evaluacion=self.evaluacion_obtenida_por_el_jefe#self.trabajador.salario_escala
+        puntos=self.evaluacion_obtenida_por_el_jefe_en_puntos
+        if puntos<60:
+            evaluacion = "D"
+        elif puntos >=60 and puntos<=79:
+            evaluacion = "R"
+        elif puntos >=80 and puntos<=89:
+            evaluacion = "B"
+        elif puntos >=90 and puntos<=96:
+            evaluacion = "B"
+        else:
+            evaluacion = "E"
+        self.evaluacion_obtenida_por_el_jefe=evaluacion#self.trabajador.salario_escala
         salario_escala=self.trabajador.salario_escala
         if evaluacion == "D":
             salario_basico_seleccionado=salario_escala.rango_salarial_1

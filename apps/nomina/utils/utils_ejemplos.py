@@ -67,7 +67,7 @@ def create_fake_trabajadores(num_trabajadores=20):
 
                 salario = SalarioMensualTotalPagado()
                 evaluacion=evaluaciones[random.randint(0,len(evaluaciones)-1)]
-                salario.evaluacion_obtenida_por_el_jefe = evaluacion[0]
+                # salario.evaluacion_obtenida_por_el_jefe = evaluacion[0]
                 salario.evaluacion_obtenida_por_el_jefe_en_puntos = evaluacion[1]
                 salario.fecha = fecha
                 salario.trabajador = trabajador

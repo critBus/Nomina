@@ -64,7 +64,7 @@ class TestSetUpEmpty(APITestCase):
                 asisetencia.save()
 
             salario = SalarioMensualTotalPagado()
-            salario.evaluacion_obtenida_por_el_jefe="E"
+            # salario.evaluacion_obtenida_por_el_jefe="E"
             salario.evaluacion_obtenida_por_el_jefe_en_puntos=100
             salario.fecha = fecha
             salario.trabajador = trabajador
