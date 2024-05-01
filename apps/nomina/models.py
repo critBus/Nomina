@@ -332,7 +332,8 @@ class Trabajador(models.Model):
     def __str__(self):
         return f"{self.nombre} {self.apellidos}"
 
-
+def get_horas_correctas():
+    return 8 if es_viernes(timezone.now()) else 9
 class Asistencia(models.Model):
     class Meta:
         unique_together = (("trabajador", "fecha"),)
@@ -345,7 +346,7 @@ class Asistencia(models.Model):
     )
     horas_trabajadas = models.IntegerField(
         verbose_name="Horas Trabajadas",
-        default=8,
+        default=get_horas_correctas,
         validators=[MinValueValidator(1), MaxValueValidator(9)],
     )
     trabajador = models.ForeignKey(
@@ -442,13 +443,13 @@ class LicenciaPrenatal(models.Model):
     )
     es_simple = models.BooleanField(default=True)
 
-    prestacion_economica = models.FloatField(
+    prestacion_economica = models.DecimalField(decimal_places=2, max_digits=15,
         verbose_name="Prestación Económica", validators=[MinValueValidator(0)]
     )
-    importe_semanal = models.FloatField(
+    importe_semanal = models.DecimalField(decimal_places=2, max_digits=15,
         verbose_name="Prestación Económica", validators=[MinValueValidator(0)]
     )
-    salario_anual = models.FloatField(
+    salario_anual = models.DecimalField(decimal_places=2, max_digits=15,
         verbose_name="Salario Anual", validators=[MinValueValidator(0)]
     )
 
@@ -508,7 +509,7 @@ class PrimeraLicenciaPosnatal(models.Model):
     #     verbose_name="Licencia Prenatal",
     #
     # )
-    prestacion_economica = models.FloatField(
+    prestacion_economica = models.DecimalField(decimal_places=2, max_digits=15,
         verbose_name="Prestación Económica",
         validators=[MinValueValidator(0)],
 
@@ -607,7 +608,7 @@ class SegundaLicenciaPosnatal(models.Model):
     #     verbose_name="Primera Licencia Posnatal",
     #
     # )
-    prestacion_economica = models.FloatField(
+    prestacion_economica =models.DecimalField(decimal_places=2, max_digits=15,
         verbose_name="Prestación Económica",
         validators=[MinValueValidator(0)],
 
@@ -679,7 +680,7 @@ class PrestacionSocial(models.Model):
     #     verbose_name="Segunda Licencia Posnatal",
     #
     # )
-    prestacion_economica = models.FloatField(
+    prestacion_economica = models.DecimalField(decimal_places=2, max_digits=15,
         verbose_name="Prestación Económica",
         validators=[MinValueValidator(0)],
 
@@ -731,7 +732,7 @@ def crear_PrestacionSocial(segunda: SegundaLicenciaPosnatal, prestacion=None):
 
 class PagoPorUtilidades(models.Model):
     fecha = models.DateField(verbose_name="Fecha", default=timezone.now)
-    pago = models.FloatField(
+    pago = models.DecimalField(decimal_places=2, max_digits=15,
         verbose_name="Pago Por Utilidades", validators=[MinValueValidator(0)]
     )
     trabajador = models.ForeignKey(
@@ -741,7 +742,7 @@ class PagoPorUtilidades(models.Model):
 
 class PagoPorSubsidios(models.Model):
     fecha = models.DateField(verbose_name="Fecha", default=timezone.now)
-    pago = models.FloatField(
+    pago = models.DecimalField(decimal_places=2, max_digits=15,
         verbose_name="Pago Por Subsidios", validators=[MinValueValidator(0)]
     )
     trabajador = models.ForeignKey(
@@ -750,6 +751,9 @@ class PagoPorSubsidios(models.Model):
 
 
 class SalarioMensualTotalPagado(models.Model):
+    class Meta:
+        verbose_name = "Salario Mensual"
+        verbose_name_plural = "Salarios Mensuales"
     EVALUACIONES=[
             (
                 "D",
@@ -776,10 +780,11 @@ class SalarioMensualTotalPagado(models.Model):
     trabajador = models.ForeignKey(
         Trabajador, on_delete=models.CASCADE, verbose_name="Trabajador"
     )
-    salario_devengado_mensual = models.FloatField(
-        verbose_name="Salario Devengado Mensual", validators=[MinValueValidator(0)]
+    salario_devengado_mensual = models.DecimalField(decimal_places=2, max_digits=15,
+        verbose_name="Salario Devengado Mensual",
+        validators=[MinValueValidator(0)]
     )
-    salario_basico_mensual = models.FloatField(
+    salario_basico_mensual = models.DecimalField(decimal_places=2, max_digits=15,
         verbose_name="Salario Basico Mensual", validators=[MinValueValidator(0)]
     )
     evaluacion_obtenida_por_el_jefe=models.CharField(
@@ -856,10 +861,9 @@ class SalarioMensualTotalPagado(models.Model):
         if dias_feriados:
             SDSA = calcular_SDSA(self.fecha, self.trabajador)
             for dia in dias_feriados:
-                #es_viernes=self.fecha.replace(day=dia).weekday()==4
                 viernes=es_viernes(self.fecha.replace(day=dia))
                 # print(f"SDSA {SDSA}")
-                suma +=len(dias_feriados)*(8 if not viernes else 9)*SDSA
+                suma +=len(dias_feriados)*(9 if not viernes else 8)*SDSA
         return suma
     def actualizar_salario(self):
         evaluacion=self.evaluacion_obtenida_por_el_jefe#self.trabajador.salario_escala

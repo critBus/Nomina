@@ -379,74 +379,16 @@ class CertificadoMedicoAdmin(admin.ModelAdmin):
     date_hierarchy = "fecha_inicio"
 
 
-# @admin.register(CertificadoMaternidad)
-# class CertificadoMaternidadAdmin(admin.ModelAdmin):
-#     list_display = ("fecha_inicio", "fecha_fin", "trabajador")
-#     search_fields = (
-#         "fecha_inicio",
-#         "fecha_fin",
-#         "trabajador",
-#     )
-#     list_filter = (
-#         "fecha_inicio",
-#         "fecha_fin",
-#         "trabajador",
-#     )
-#     ordering = (
-#         "fecha_inicio",
-#         "fecha_fin",
-#         "trabajador",
-#     )
-#     date_hierarchy = "fecha_inicio"
-
-
-# Register your models here.
-#
-# REPORTE_Cargo_PDF=AdministradorDeReporte()
-# REPORTE_Cargo_PDF.setClaseModelo(Cargo)
-# REPORTE_Cargo_PDF.titulo="Cargos"
-# REPORTE_Cargo_PDF.add('Cargo',lambda v:v.cargo)
-# REPORTE_Cargo_PDF.add('Salario Basico',lambda v:v.salario_basico)
-# REPORTE_Cargo_PDF.add('Trabajadores',lambda v:"<br/>".join([f"{z.nombre} {z.apellidos}" for z in v.trabajador_set.all()]))
-#
-#
-#
-# @admin.register(Cargo)
-# class CargoAdmin(admin.ModelAdmin):
-#     list_display = (
-#         "cargo",
-#         "salario_basico",
-#     )
-#     search_fields = (
-#         "cargo",
-#         "salario_basico",
-#     )
-#     list_filter = ("cargo",)
-#     ordering = (
-#         "cargo",
-#         "salario_basico",
-#     )
-#     actions = [REPORTE_Cargo_PDF.getAction()]
-#
-# REPORTE_Escala_PDF=AdministradorDeReporte()
-# REPORTE_Escala_PDF.setClaseModelo(Cargo)
-# REPORTE_Escala_PDF.titulo="Escala"
-# REPORTE_Escala_PDF.add('Escala',lambda v:v.escala)
-# REPORTE_Escala_PDF.add('Salario Basico',lambda v:v.salario_basico)
-# REPORTE_Escala_PDF.add('Trabajadores',lambda v:"<br/>".join([f"{z.nombre} {z.apellidos}" for z in v.trabajador_set.all()]))
-#
-# @admin.register(Escala)
-# class EscalaAdmin(admin.ModelAdmin):
-#     list_display = (
-#         "escala",
-#         "salario_basico",
-#     )
-#     search_fields = (
-#         "escala",
-#         "salario_basico",
-#     )
-#     list_filter = ("escala",)
-#     ordering = (
-#         "escala",
-#         "salario_basico",
-#     )
+@admin.register(SalarioMensualTotalPagado)
+class SalarioMensualTotalPagadoAdmin(admin.ModelAdmin):
+    list_display = ("fecha","trabajador", "salario_devengado_mensual", "evaluacion_obtenida_por_el_jefe","evaluacion_obtenida_por_el_jefe_en_puntos")
+    search_fields = (
+        "fecha","trabajador", "salario_devengado_mensual", "evaluacion_obtenida_por_el_jefe","evaluacion_obtenida_por_el_jefe_en_puntos"
+    )
+    list_filter = (
+        "fecha","trabajador", "evaluacion_obtenida_por_el_jefe",
+    )
+    ordering = (
+        "fecha","trabajador", "salario_devengado_mensual", "evaluacion_obtenida_por_el_jefe","evaluacion_obtenida_por_el_jefe_en_puntos"
+    )
+    date_hierarchy = "fecha"

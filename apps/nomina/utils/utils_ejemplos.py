@@ -61,7 +61,7 @@ def create_fake_trabajadores(num_trabajadores=20):
                     fechas_dias.append(fecha_dia_de_asitencia)
                     asisetencia = Asistencia()
                     asisetencia.fecha = fecha_dia_de_asitencia
-                    asisetencia.horas_trabajadas = 9 if es_viernes(fecha_dia_de_asitencia) else 8
+                    asisetencia.horas_trabajadas = 8 if es_viernes(fecha_dia_de_asitencia) else 9
                     asisetencia.trabajador = trabajador
                     asisetencia.save()
 
