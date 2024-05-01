@@ -161,7 +161,7 @@ class LicenciaMaternidadAdmin(admin.ModelAdmin):
 
 
 class categoria_ocupacional_Filter(admin.SimpleListFilter):
-    title = "Primera Posnatal"
+    title = "Categoria Ocupacional"
     parameter_name = "nada"
 
     def lookups(self, request, model_admin):
