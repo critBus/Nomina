@@ -886,7 +886,9 @@ class SalarioMensualTotalPagado(models.Model):
         self.salario_devengado_mensual = salario_basico_seleccionado
         self.salario_devengado_mensual*= self.evaluacion_obtenida_por_el_jefe_en_puntos / 100
         self.salario_devengado_mensual /=  190.6
-        self.salario_devengado_mensual*=self.calcular_cantidad_de_horas_trabajadas_este_mes()
+        a_float=float(self.salario_devengado_mensual)
+        resultado=a_float*float(self.calcular_cantidad_de_horas_trabajadas_este_mes())
+        self.salario_devengado_mensual=resultado
         if self.pago_por_utilidades:
             self.salario_devengado_mensual -= self.pago_por_utilidades.pago
         if self.pago_por_subsidios:

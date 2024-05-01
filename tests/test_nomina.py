@@ -7,13 +7,14 @@ from django.core.files import File
 from django.core.files.storage import default_storage
 from django.urls import reverse
 from django.utils import timezone
+from faker import Faker
 from rest_framework.test import APITestCase
 from apps.nomina.models import Trabajador,LicenciaPrenatal,LicenciaMaternidad,SegundaLicenciaPosnatal,PrestacionSocial,PrimeraLicenciaPosnatal,SalarioMensualTotalPagado,SalarioEscala,Asistencia
 
 from apps.nomina.utils.util_salario import get_dias_laborales, es_viernes, get_first_day_of_last_30_months
 from apps.nomina.utils.utils_ejemplos import obtener_fechas_ultimos_30_meses
 import random
-
+fake = Faker()
 def mes_a_numero(mes):
     meses = {"enero": 1, "febrero": 2, "marzo": 3,
              "abril": 4, "mayo": 5, "junio": 6, "julio": 7,
@@ -29,7 +30,20 @@ class TestSetUpEmpty(APITestCase):
         salario_escala:SalarioEscala=SalarioEscala.objects.filter(grupo_escala="XXI",grupo_complejidad="VI").first()
         self.assertEqual(True, salario_escala is not None)
         self.assertEqual(11195, salario_escala.rango_salarial_5)
-        trabajador = Trabajador.objects.first()
+        trabajador = Trabajador.objects.create(
+            carnet=fake.unique.numerify(text="############"),
+            nombre=fake.first_name(),
+            apellidos=fake.last_name(),
+            categoria_ocupacional=fake.random_element(
+                elements=("Categoria1", "Categoria2")
+            ),
+            email=fake.email(),
+            telefono=fake.unique.numerify(text="########"),
+            direccion=fake.address(),
+            area=fake.random_element(elements=("Economía", "Desarrollo", "Dirección")),
+            salario_escala=salario_escala)
+        #salarios[random.randint(1, 20)],)
+        #trabajador = Trabajador.objects.first()
         fechas_dias=[]
         ultimos_30_meses =get_first_day_of_last_30_months()#obtener_fechas_ultimos_30_meses()
         for fecha in ultimos_30_meses:

@@ -97,7 +97,7 @@ class LicenciaMaternidadAdmin(admin.ModelAdmin):
         "view_primera_licencia_posnatal",
     )
     search_fields = (
-        #"trabajador",
+        "trabajador__nombre",
         "fecha_inicio",
     )
     list_filter = (
@@ -343,7 +343,7 @@ class AsistenciaAdmin(admin.ModelAdmin):
     search_fields = (
         "fecha",
         "horas_trabajadas",
-        "trabajador",
+        "trabajador__nombre",
     )
     list_filter = (
         "horas_trabajadas",
@@ -364,7 +364,7 @@ class CertificadoMedicoAdmin(admin.ModelAdmin):
     search_fields = (
         "fecha_inicio",
         "fecha_fin",
-        "trabajador",
+        "trabajador__nombre",
     )
     list_filter = (
         "fecha_inicio",
@@ -381,9 +381,10 @@ class CertificadoMedicoAdmin(admin.ModelAdmin):
 
 @admin.register(SalarioMensualTotalPagado)
 class SalarioMensualTotalPagadoAdmin(admin.ModelAdmin):
+    readonly_fields = ("salario_devengado_mensual","salario_basico_mensual",)
     list_display = ("fecha","trabajador", "salario_devengado_mensual", "evaluacion_obtenida_por_el_jefe","evaluacion_obtenida_por_el_jefe_en_puntos")
     search_fields = (
-        "fecha","trabajador", "salario_devengado_mensual", "evaluacion_obtenida_por_el_jefe","evaluacion_obtenida_por_el_jefe_en_puntos"
+        "fecha","trabajador__nombre", "salario_devengado_mensual", "evaluacion_obtenida_por_el_jefe","evaluacion_obtenida_por_el_jefe_en_puntos"
     )
     list_filter = (
         "fecha","trabajador", "evaluacion_obtenida_por_el_jefe",
