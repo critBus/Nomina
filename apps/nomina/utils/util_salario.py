@@ -26,6 +26,7 @@ def get_days_in_month(year, month):
 
     days = [(start_date + timedelta(days=i)).date() for i in range((end_date - start_date).days + 1)]
     days=list(set(days))
+    # print(f"cantida dias del mes {len(days)}")
     # days.sort()
     # print(f"{days[0].month if days else '-'} {days[0].year if days else '-'}  {[v.day for v in days]}")
 

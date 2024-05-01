@@ -53,7 +53,10 @@ def create_fake_trabajadores(num_trabajadores=20):
             if i>15:
                 break
             for fecha in ultimos_30_meses:
-                # print()
+                # if fecha.year==2024 and fecha.month==7 and fecha.day==1:
+                #     print("el dia que se exede")
+                # if fecha.year==2024 and fecha.month==5 and fecha.day==13:
+                #     print("el dia que se exede")
                 dias_de_este_mes = get_dias_laborales(fecha.year, fecha.month)
                 for fecha_dia_de_asitencia in dias_de_este_mes:
 

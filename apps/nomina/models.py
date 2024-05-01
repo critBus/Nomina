@@ -818,6 +818,11 @@ class SalarioMensualTotalPagado(models.Model):
     horas_trabajadas=models.IntegerField(
         verbose_name="Horas Trabajadas", validators=[MinValueValidator(0)]
     )
+    pago_por_dias_feriados = models.DecimalField(decimal_places=2, max_digits=15,
+                                                 verbose_name="Pago Dias Feriados",
+                                                 validators=[MinValueValidator(0)]
+                                                 )
+
     def get_evalucacion_str(self):
         for evaluacion in self.EVALUACIONES:
             if self.evaluacion_obtenida_por_el_jefe ==evaluacion[0]:
@@ -828,10 +833,18 @@ class SalarioMensualTotalPagado(models.Model):
     def calcular_cantidad_de_horas_trabajadas_este_mes(self):
         # return calcular_cantidad_de_horas_trabajadas_por_mes(self.fecha)
         asistencias=Asistencia.objects.filter(
+            trabajador=self.trabajador,
             fecha__year=self.fecha.year,
             fecha__month=self.fecha.month
-        )
-
+        )#.distinct()
+        # print(len(asistencias))
+        # lista=[v.fecha.day for v in asistencias]
+        # lista.sort()
+        # print(lista)
+        # print({v.fecha.month for v in asistencias})
+        # lista = [v.id for v in asistencias]
+        # lista.sort()
+        # print(lista)
         suma=0
         for asistencia in asistencias:
             suma+=asistencia.horas_trabajadas
@@ -853,7 +866,7 @@ class SalarioMensualTotalPagado(models.Model):
             for dia in dias_feriados:
                 viernes=es_viernes(self.fecha.replace(day=dia))
                 # print(f"SDSA {SDSA}")
-                suma +=len(dias_feriados)*(9 if not viernes else 8)
+                suma +=(9 if not viernes else 8)#len(dias_feriados)*
 
             suma*=TH
         return suma
@@ -886,7 +899,7 @@ class SalarioMensualTotalPagado(models.Model):
 
         self.salario_basico_mensual=salario_basico_seleccionado
         self.horas_trabajadas=self.calcular_cantidad_de_horas_trabajadas_este_mes()
-
+        # if self.horas_trabajadas>
         self.salario_devengado_mensual = salario_basico_seleccionado
         # self.salario_devengado_mensual*= self.evaluacion_obtenida_por_el_jefe_en_puntos / 100
         self.salario_devengado_mensual /=  190.6
@@ -898,9 +911,13 @@ class SalarioMensualTotalPagado(models.Model):
         if self.pago_por_subsidios:
             self.salario_devengado_mensual -= self.pago_por_subsidios.pago
         
-        a_float=float(self.salario_devengado_mensual)
-        resultado=a_float*float(self.calcular_pago_cantidad_de_horas_trabajadas_este_mes_feriados())
+        #a_float=float(self.salario_devengado_mensual)
+        self.pago_por_dias_feriados=self.calcular_pago_cantidad_de_horas_trabajadas_este_mes_feriados()
+        resultado=float(self.pago_por_dias_feriados)
         self.salario_devengado_mensual+=resultado
+
+        if self.salario_devengado_mensual>20000:
+            print(f"exedio")
 
 
     def save(self, *args, **kwargs):
@@ -914,36 +931,36 @@ class SalarioMensualTotalPagado(models.Model):
     def __str__(self):
         return f"{self.trabajador.nombre} {self.trabajador.apellidos} {self.fecha}"
 
-def calcular_cantidad_de_horas_trabajadas_por_mes(fecha):
-    salario= SalarioMensualTotalPagado.objects.filter(
-        fecha__year=fecha.year,
-        fecha__month=fecha.month
-    ).first()
-    if salario:
-        return salario.horas_trabajadas
-    return 0
+# def calcular_cantidad_de_horas_trabajadas_por_mes(fecha):
+#     salario= SalarioMensualTotalPagado.objects.filter(
+#         fecha__year=fecha.year,
+#         fecha__month=fecha.month
+#     ).first()
+#     if salario:
+#         return salario.horas_trabajadas
+#     return 0
 
     
     
     
-def calcular_cantidad_de_horas_trabajadas_por_mes_calculo_bruto(fecha):
-    asistencias=Asistencia.objects.filter(
-        fecha__year=fecha.year,
-        fecha__month=fecha.month
-    )
-
-    suma=0
-    for asistencia in asistencias:
-        suma+=asistencia.horas_trabajadas
-    # print(suma)
-    
-    return suma
-def calcular_cantidad_de_horas_trabajadas_de_los_ultimos_calculo_bruto(cantidad_meses):
-    primeros_dias_del_mes=get_first_day_of_last_months(cantidad_meses)
-    suma=0
-    for fecha in primeros_dias_del_mes:
-        suma+=calcular_cantidad_de_horas_trabajadas_por_mes(fecha)
-    return suma
+# def calcular_cantidad_de_horas_trabajadas_por_mes_calculo_bruto(fecha):
+#     asistencias=Asistencia.objects.filter(
+#         fecha__year=fecha.year,
+#         fecha__month=fecha.month
+#     )
+#
+#     suma=0
+#     for asistencia in asistencias:
+#         suma+=asistencia.horas_trabajadas
+#     # print(suma)
+#
+#     return suma
+# def calcular_cantidad_de_horas_trabajadas_de_los_ultimos_calculo_bruto(cantidad_meses):
+#     primeros_dias_del_mes=get_first_day_of_last_months(cantidad_meses)
+#     suma=0
+#     for fecha in primeros_dias_del_mes:
+#         suma+=calcular_cantidad_de_horas_trabajadas_por_mes(fecha)
+#     return suma
 def calcular_cantidad_de_horas_trabajadas_de_los_ultimos(trabajador, cantidad_de_meses):
     # fecha_limite_inferior = fecha - timezone.timedelta(days=365)
     # fecha_limite_inferior.replace(day=1)
@@ -975,33 +992,3 @@ def calcular_SA(fecha, trabajador):
 def calcular_SDSA(fecha, trabajador):
     return calcular_suma_salario(fecha, trabajador, 6)
 
-# class Cargo(models.Model):
-#     class Meta:
-#         verbose_name = "Cargo"
-#         verbose_name_plural = "Cargos"
-#
-#     cargo = models.CharField(
-#         verbose_name="Cargo", max_length=256, validators=[not_empty_validation]
-#     )
-#     salario_basico = models.FloatField(
-#         verbose_name="Salario Basico", validators=[MinValueValidator(0)]
-#     )
-#
-#     def __str__(self):
-#         return self.cargo
-
-
-# class Escala(models.Model):
-#     class Meta:
-#         verbose_name = "Escala"
-#         verbose_name_plural = "Escalas"
-#
-#     escala = models.CharField(
-#         verbose_name="Escala", max_length=256, validators=[not_empty_validation]
-#     )
-#     salario_basico = models.FloatField(
-#         verbose_name="Salario Basico", validators=[MinValueValidator(0)]
-#     )
-#
-#     def __str__(self):
-#         return self.escala
