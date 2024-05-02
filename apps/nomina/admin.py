@@ -360,6 +360,7 @@ class AsistenciaAdmin(admin.ModelAdmin):
 
 @admin.register(CertificadoMedico)
 class CertificadoMedicoAdmin(admin.ModelAdmin):
+    readonly_fields = ("prestacion_economica",)
     list_display = ("fecha_inicio", "fecha_fin", "trabajador")
     search_fields = (
         "fecha_inicio",

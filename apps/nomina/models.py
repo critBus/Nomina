@@ -15,7 +15,8 @@ from apps.nomina.utils.util_salario import (
     dias_restantes_mes,
     siguiente_dia_laborable,
     primer_cumpleannos,
-    diferencia_menos_de_5_meses, nombre_dia_semana, es_viernes, get_dias_feriado,
+    diferencia_menos_de_5_meses, nombre_dia_semana, es_viernes, get_dias_feriado, get_cantidad_dias_entre_semana,
+    get_cantidad_de_horas_entre_semana,
 )
 
 
@@ -385,6 +386,7 @@ class CertificadoMedico(models.Model):
     prestacion_economica = models.DecimalField(decimal_places=2, max_digits=15,
                                                verbose_name="Prestación Económica", validators=[MinValueValidator(0)]
                                                )
+    ingresado= models.BooleanField(verbose_name="Ingresado", default=False)
 
     def clean(self):
         super().clean()
@@ -398,6 +400,46 @@ class CertificadoMedico(models.Model):
         return (
             f"{self.trabajador.nombre} {self.trabajador.apellidos} {self.fecha_inicio}"
         )
+
+    def calcular_HT(self):
+        asistencias = Asistencia.objects.filter(
+            trabajador=self.trabajador,
+            fecha__year=self.fecha.year,
+            fecha__month=self.fecha.month
+        )  # .distinct()
+        # print(len(asistencias))
+        # lista=[v.fecha.day for v in asistencias]
+        # lista.sort()
+        # print(lista)
+        # print({v.fecha.month for v in asistencias})
+        # lista = [v.id for v in asistencias]
+        # lista.sort()
+        # print(lista)
+        suma = 0
+        for asistencia in asistencias:
+            suma += asistencia.horas_trabajadas
+        # print(suma)
+
+        return suma
+    def actualizar_salario(self):
+        SA=calcular_SA(self.fecha_inicio,self.trabajador)
+        X=SA/12
+        a_float = float(X)
+        resultado = a_float / float(190.6)
+        Y=resultado#X/190.6
+        if not self.ingresado:
+            Z = Y * 60/100
+        else:
+            Z = Y * 50 / 100
+        #DC=get_cantidad_dias_entre_semana(self.fecha_inicio,self.fecha_fin)
+        HT=get_cantidad_de_horas_entre_semana(self.fecha_inicio,self.fecha_fin)
+        C = Z * HT#DC#C = Z * (HT - DC)
+        self.prestacion_economica=C
+
+
+    def save(self, *args, **kwargs):
+        self.actualizar_salario()
+        return super().save(*args, **kwargs)
 
 
 class LicenciaMaternidad(models.Model):
@@ -931,36 +973,7 @@ class SalarioMensualTotalPagado(models.Model):
     def __str__(self):
         return f"{self.trabajador.nombre} {self.trabajador.apellidos} {self.fecha}"
 
-# def calcular_cantidad_de_horas_trabajadas_por_mes(fecha):
-#     salario= SalarioMensualTotalPagado.objects.filter(
-#         fecha__year=fecha.year,
-#         fecha__month=fecha.month
-#     ).first()
-#     if salario:
-#         return salario.horas_trabajadas
-#     return 0
 
-    
-    
-    
-# def calcular_cantidad_de_horas_trabajadas_por_mes_calculo_bruto(fecha):
-#     asistencias=Asistencia.objects.filter(
-#         fecha__year=fecha.year,
-#         fecha__month=fecha.month
-#     )
-#
-#     suma=0
-#     for asistencia in asistencias:
-#         suma+=asistencia.horas_trabajadas
-#     # print(suma)
-#
-#     return suma
-# def calcular_cantidad_de_horas_trabajadas_de_los_ultimos_calculo_bruto(cantidad_meses):
-#     primeros_dias_del_mes=get_first_day_of_last_months(cantidad_meses)
-#     suma=0
-#     for fecha in primeros_dias_del_mes:
-#         suma+=calcular_cantidad_de_horas_trabajadas_por_mes(fecha)
-#     return suma
 def calcular_cantidad_de_horas_trabajadas_de_los_ultimos(trabajador, cantidad_de_meses):
     # fecha_limite_inferior = fecha - timezone.timedelta(days=365)
     # fecha_limite_inferior.replace(day=1)

@@ -1,10 +1,10 @@
 from .util_salario import get_first_day_of_last_30_months, get_dias_laborales, es_viernes
 from ..models import Trabajador, SalarioEscala, SalarioMensualTotalPagado, LicenciaMaternidad, LicenciaPrenatal, \
-    PrimeraLicenciaPosnatal, SegundaLicenciaPosnatal, PrestacionSocial, Asistencia
+    PrimeraLicenciaPosnatal, SegundaLicenciaPosnatal, PrestacionSocial, Asistencia,CertificadoMedico
 from faker import Faker
 import random
 from datetime import datetime, timedelta
-
+from django.utils import timezone
 
 
 fake = Faker()
@@ -110,6 +110,13 @@ def create_fake_trabajadores(num_trabajadores=20):
                     primera.fecha_inicio=fecha_inicio + timedelta(weeks=45)
                     primera.fecha_fin=primera.fecha_inicio + timedelta(weeks=6)
                     primera.save()
+            if i>5 and i<10:
+                certificado=CertificadoMedico()
+                certificado.fecha_inicio=timezone.now()
+                certificado.fecha_fin=certificado.fecha_inicio+timedelta(weeks=random.randint(5,8))
+                certificado.trabajador=trabajador
+                certificado.ingresado=random.randint(1,3)==2
+                certificado.save()
 
 
 

@@ -164,3 +164,53 @@ def get_first_day_of_last_months(cantidad_de_meses):
 
 def get_first_day_of_last_30_months():
     return get_first_day_of_last_months(30)
+
+
+def get_diferencia_dias(fecha1, fecha2):
+    diferencia = fecha1 - fecha2
+    return diferencia.days
+
+
+def get_cantidad_dias_entre_semana(inicio, fin):
+    """
+    Calcula la cantidad de días entre semana (lunes a viernes) entre dos fechas.
+
+    Args:
+        inicio : Fecha de inicio .
+        fin : Fecha de fin .
+
+    Returns:
+        int: Cantidad de días entre semana entre las dos fechas.
+    """
+
+    # Inicializar el contador de días entre semana
+    dias_entre_semana = 0
+
+    # Iterar entre las fechas
+    current_date = inicio
+    while current_date <= fin:
+        # Verificar si el día es entre semana (lunes a viernes)
+        if current_date.weekday() < 5:
+            dias_entre_semana += 1
+        # Avanzar al siguiente día
+        current_date += timedelta(days=1)
+
+    return dias_entre_semana
+
+
+def get_cantidad_de_horas_entre_semana(inicio, fin):
+
+
+    # Inicializar el contador de días entre semana
+    suma = 0
+
+    # Iterar entre las fechas
+    current_date = inicio
+    while current_date <= fin:
+        # Verificar si el día es entre semana (lunes a viernes)
+        if current_date.weekday() < 5:
+            suma+=8 if es_viernes(current_date) else 9
+        # Avanzar al siguiente día
+        current_date += timedelta(days=1)
+
+    return suma
