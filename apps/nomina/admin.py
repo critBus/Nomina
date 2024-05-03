@@ -1,6 +1,7 @@
 from django.contrib import admin
+from django.db.models import BooleanField, Case, CharField, Q, Value, When
 from django_reportbroD.reportcore import reportPDF
-from django.db.models import Case, CharField, Q, Value, When,BooleanField
+
 from apps.users.models import User
 from config.utils.utils_reportes import AdministradorDeReporte
 
@@ -11,27 +12,24 @@ class LicenciaPrenatalInline(admin.StackedInline):
     model = LicenciaPrenatal
     extra = 1  # Número de campos extra en el formulario
     readonly_fields = (
-
         "prestacion_economica",
         "importe_semanal",
         "salario_anual",
     )
     min_num = 1
     max_num = 1
-    exclude = ["trabajador",]
+    exclude = [
+        "trabajador",
+    ]
     can_delete = False
 
 
 class PrimeraLicenciaPosnatalInline(admin.StackedInline):
     model = PrimeraLicenciaPosnatal
     extra = 1  # Número de campos extra en el formulario
-    readonly_fields = (
-
-        "prestacion_economica",
-    )
+    readonly_fields = ("prestacion_economica",)
 
     max_num = 1
-
 
 
 class SegundaLicenciaPosnatalInline(admin.StackedInline):
@@ -42,10 +40,9 @@ class SegundaLicenciaPosnatalInline(admin.StackedInline):
         "fecha_fin",
         "prestacion_economica",
     )
-    #min_num = 1
+    # min_num = 1
     max_num = 1
     can_delete = False
-
 
 
 class PrestacionSocialInline(admin.StackedInline):
@@ -56,35 +53,36 @@ class PrestacionSocialInline(admin.StackedInline):
         "fecha_fin",
         "prestacion_economica",
     )
-    can_delete=False
-    #min_num = 1
+    can_delete = False
+    # min_num = 1
     max_num = 1
+
 
 class primera_licencia_posnatal_Filter(admin.SimpleListFilter):
     title = "Primera Posnatal"
     parameter_name = "nada"
 
     def lookups(self, request, model_admin):
-        return ((True, True),(False,False))
+        return ((True, True), (False, False))
 
     def queryset(self, request, queryset):
         # apply the filter to the queryset
         if self.value():
-            valor=self.value()
+            valor = self.value()
             # print(valor)
             # print(type(valor))
             return queryset.filter(
-                        primeralicenciaposnatal__isnull=valor.lower()=="false"
-                    )
+                primeralicenciaposnatal__isnull=valor.lower() == "false"
+            )
         return queryset
-
-
 
 
 @admin.register(LicenciaMaternidad)
 class LicenciaMaternidadAdmin(admin.ModelAdmin):
-    #readonly_fields = ("fecha_inicio",)
-    exclude = ["fecha_inicio", ]
+    # readonly_fields = ("fecha_inicio",)
+    exclude = [
+        "fecha_inicio",
+    ]
     inlines = [
         LicenciaPrenatalInline,
         PrimeraLicenciaPosnatalInline,
@@ -100,18 +98,12 @@ class LicenciaMaternidadAdmin(admin.ModelAdmin):
         "trabajador__nombre",
         "fecha_inicio",
     )
-    list_filter = (
-        "trabajador",
-        "fecha_inicio",
-        primera_licencia_posnatal_Filter
-    )
+    list_filter = ("trabajador", "fecha_inicio", primera_licencia_posnatal_Filter)
     ordering = (
         "trabajador",
         "fecha_inicio",
     )
     date_hierarchy = "fecha_inicio"
-
-
 
     def get_queryset(self, request):
         return (
@@ -132,18 +124,14 @@ class LicenciaMaternidadAdmin(admin.ModelAdmin):
     def view_primera_licencia_posnatal(self, obj):
         return PrimeraLicenciaPosnatal.objects.filter(licencia_maternidad=obj).exists()
 
-    view_primera_licencia_posnatal.admin_order_field = (
-        "hay_primera_licencia_posnatal"
-    )
+    view_primera_licencia_posnatal.admin_order_field = "hay_primera_licencia_posnatal"
     view_primera_licencia_posnatal.short_description = "Primera Licencia Posnatal"
-
 
     def before_save(self, request, obj, form, change):
         prenatal = obj.licenciaprenatal
         if prenatal:
             prenatal.trabajador = obj.trabajador
             obj.fecha_inicio = prenatal.fecha_inicio
-
 
     def save_related(self, request, form, formsets, change):
         # Llama a la función antes de guardar los modelos
@@ -152,12 +140,10 @@ class LicenciaMaternidadAdmin(admin.ModelAdmin):
         super().save_related(request, form, formsets, change)
 
     def save_model(self, request, obj, form, change):
-
         # Llama a la función antes de guardar los modelos
         self.before_save(request, form.instance, form, change)
         response = super().save_model(request, obj, form, change)
         return response
-
 
 
 class categoria_ocupacional_Filter(admin.SimpleListFilter):
@@ -165,23 +151,30 @@ class categoria_ocupacional_Filter(admin.SimpleListFilter):
     parameter_name = "nada"
 
     def lookups(self, request, model_admin):
-        return (("Operario", "Operario"),
-                ("Servicios","Servicios"),
-                ("Técnicos de actividad o gestion", "Técnicos de actividad o gestion"),
-                ("Técnicos gestores de actividad de gestion", "Técnicos gestores de actividad de gestion"),
-                ("Técnicos actividades generales", "Técnicos actividades generales"),
-                ("Técnicos gestores actividades principales", "Técnicos gestores actividades principales"),
-                )
+        return (
+            ("Operario", "Operario"),
+            ("Servicios", "Servicios"),
+            ("Técnicos de actividad o gestion", "Técnicos de actividad o gestion"),
+            (
+                "Técnicos gestores de actividad de gestion",
+                "Técnicos gestores de actividad de gestion",
+            ),
+            ("Técnicos actividades generales", "Técnicos actividades generales"),
+            (
+                "Técnicos gestores actividades principales",
+                "Técnicos gestores actividades principales",
+            ),
+        )
 
     def queryset(self, request, queryset):
         # apply the filter to the queryset
         if self.value():
-            valor=self.value()
-            grupo_complejidad="VI"
+            valor = self.value()
+            grupo_complejidad = "VI"
             if valor == "Operario":
                 grupo_complejidad = "I"
 
-            elif valor =="Servicios":
+            elif valor == "Servicios":
                 grupo_complejidad = "II"
 
             elif valor == "Técnicos de actividad o gestion":
@@ -193,27 +186,26 @@ class categoria_ocupacional_Filter(admin.SimpleListFilter):
             elif valor == "Técnicos actividades generales":
                 grupo_complejidad = "V"
 
-            return queryset.filter(
-                grupo_complejidad=grupo_complejidad
-            )
+            return queryset.filter(grupo_complejidad=grupo_complejidad)
 
         return queryset
 
 
 @admin.register(SalarioEscala)
 class SalarioEscalaAdmin(admin.ModelAdmin):
-    list_display = ("grupo_complejidad",
-                    "grupo_escala",
-                    #"rango_salarial",
-                    # "salario",
-                    "view_categoria_ocupacional",
-                    "rango_salarial_1",
-                    "rango_salarial_2",
-                    "rango_salarial_3",
-                    "rango_salarial_4",
-                    "rango_salarial_5",
-                    #"categoria_ocupacional",
-                    )
+    list_display = (
+        "grupo_complejidad",
+        "grupo_escala",
+        # "rango_salarial",
+        # "salario",
+        "view_categoria_ocupacional",
+        "rango_salarial_1",
+        "rango_salarial_2",
+        "rango_salarial_3",
+        "rango_salarial_4",
+        "rango_salarial_5",
+        # "categoria_ocupacional",
+    )
     search_fields = (
         "grupo_complejidad",
         "grupo_escala",
@@ -224,7 +216,7 @@ class SalarioEscalaAdmin(admin.ModelAdmin):
         "rango_salarial_3",
         "rango_salarial_4",
         "rango_salarial_5",
-        #"categoria_ocupacional",
+        # "categoria_ocupacional",
     )
     list_filter = (
         "grupo_complejidad",
@@ -242,7 +234,7 @@ class SalarioEscalaAdmin(admin.ModelAdmin):
         "rango_salarial_3",
         "rango_salarial_4",
         "rango_salarial_5",
-        #"categoria_ocupacional",
+        # "categoria_ocupacional",
     )
 
     def get_queryset(self, request):
@@ -284,12 +276,8 @@ class SalarioEscalaAdmin(admin.ModelAdmin):
     def view_categoria_ocupacional(self, obj):
         return obj.categoria_ocupacional
 
-    view_categoria_ocupacional.admin_order_field = (
-        "categoria_ocupacional2"
-    )
+    view_categoria_ocupacional.admin_order_field = "categoria_ocupacional2"
     view_categoria_ocupacional.short_description = "Categoria Ocupacional"
-
-
 
 
 def generar_pdf(modeladmin, request, queryset):
@@ -357,11 +345,11 @@ class AsistenciaAdmin(admin.ModelAdmin):
     )
     date_hierarchy = "fecha"
 
+
 class PrimerCertificadoMedicoInline(admin.StackedInline):
     model = PrimerCertificadoMedico
     extra = 1
     readonly_fields = (
-
         "prestacion_economica",
         "horas_laborales",
         "horas_laborales_en_dias_de_carencia",
@@ -369,27 +357,32 @@ class PrimerCertificadoMedicoInline(admin.StackedInline):
     min_num = 1
     can_delete = False
 
+
 class ExtraCertificadoMedicoInline(admin.StackedInline):
     model = ExtraCertificadoMedico
     extra = 1
     readonly_fields = (
-
         "prestacion_economica",
         "horas_laborales",
         "horas_laborales_en_dias_de_carencia",
     )
 
-
     # def has_delete_permission(self, request, obj=None):
     #     return obj and obj.es_primero()
+
+
 @admin.register(CertificadoMedicoGeneral)
 class CertificadoMedicoGeneralAdmin(admin.ModelAdmin):
-    inlines = [
-        PrimerCertificadoMedicoInline,ExtraCertificadoMedicoInline
-
-    ]
-    readonly_fields = ("salario_anual","fecha_inicio",)
-    list_display = ("fecha_inicio", "trabajador","ingresado",)
+    inlines = [PrimerCertificadoMedicoInline, ExtraCertificadoMedicoInline]
+    readonly_fields = (
+        "salario_anual",
+        "fecha_inicio",
+    )
+    list_display = (
+        "fecha_inicio",
+        "trabajador",
+        "ingresado",
+    )
     search_fields = (
         "fecha_inicio",
         "ingresado",
@@ -410,15 +403,69 @@ class CertificadoMedicoGeneralAdmin(admin.ModelAdmin):
 
 @admin.register(SalarioMensualTotalPagado)
 class SalarioMensualTotalPagadoAdmin(admin.ModelAdmin):
-    readonly_fields = ("salario_devengado_mensual","salario_basico_mensual","evaluacion_obtenida_por_el_jefe","horas_trabajadas","pago_por_dias_feriados",)
-    list_display = ("fecha","trabajador", "salario_devengado_mensual", "evaluacion_obtenida_por_el_jefe","evaluacion_obtenida_por_el_jefe_en_puntos")
+    readonly_fields = (
+        "salario_devengado_mensual",
+        "salario_basico_mensual",
+        "evaluacion_obtenida_por_el_jefe",
+        "horas_trabajadas",
+        "pago_por_dias_feriados",
+    )
+    list_display = (
+        "fecha",
+        "trabajador",
+        "salario_devengado_mensual",
+        "evaluacion_obtenida_por_el_jefe",
+        "evaluacion_obtenida_por_el_jefe_en_puntos",
+    )
     search_fields = (
-        "fecha","trabajador__nombre", "salario_devengado_mensual", "evaluacion_obtenida_por_el_jefe","evaluacion_obtenida_por_el_jefe_en_puntos"
+        "fecha",
+        "trabajador__nombre",
+        "salario_devengado_mensual",
+        "evaluacion_obtenida_por_el_jefe",
+        "evaluacion_obtenida_por_el_jefe_en_puntos",
     )
     list_filter = (
-        "fecha","trabajador", "evaluacion_obtenida_por_el_jefe",
+        "fecha",
+        "trabajador",
+        "evaluacion_obtenida_por_el_jefe",
     )
     ordering = (
-        "fecha","trabajador", "salario_devengado_mensual", "evaluacion_obtenida_por_el_jefe","evaluacion_obtenida_por_el_jefe_en_puntos"
+        "fecha",
+        "trabajador",
+        "salario_devengado_mensual",
+        "evaluacion_obtenida_por_el_jefe",
+        "evaluacion_obtenida_por_el_jefe_en_puntos",
     )
     date_hierarchy = "fecha"
+
+
+@admin.register(PagoPorUtilidadesAnuales)
+class PagoPorUtilidadesAnualesAdmin(admin.ModelAdmin):
+    readonly_fields = (
+        "salario_anual",
+        "tiempo_real_trabajado_en_dias",
+    )
+    list_display = (
+        "fecha",
+        "trabajador",
+        "pago",
+        "pago_extra",
+    )
+    search_fields = (
+        "fecha",
+        "trabajador__nombre",
+    )
+    list_filter = (
+        "fecha",
+        "trabajador",
+    )
+    ordering = (
+        "fecha",
+        "trabajador",
+    )
+    date_hierarchy = "fecha"
+
+    def save_model(self, request, obj, form, change):
+        obj.calcular_pago()
+        response = super().save_model(request, obj, form, change)
+        return response

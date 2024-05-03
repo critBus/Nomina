@@ -1,40 +1,50 @@
+from datetime import date, datetime, timedelta
+
 from django.utils import timezone
 
-
-from datetime import datetime, timedelta,date
 # mes - dia
-DIAS_FERIADOS =(
-    (5,(1,)),
-    (7,(26,)),
+DIAS_FERIADOS = (
+    (5, (1,)),
+    (7, (26,)),
 )
-def es_dia_feriado(fecha:date):
+
+
+def es_dia_feriado(fecha: date):
     for mes, dias in DIAS_FERIADOS:
         if fecha.month == mes:
             if fecha.day in dias:
                 return True
     return False
+
+
 def get_dias_feriado(mes_a_buscar):
     for mes, dias in DIAS_FERIADOS:
-        if mes_a_buscar== mes:
+        if mes_a_buscar == mes:
             return dias
     return []
 
 
 def get_days_in_month(year, month):
     start_date = datetime(year, month, 1)
-    end_date = start_date.replace(month=start_date.month % 12 + 1, day=1) - timedelta(days=1)
+    end_date = start_date.replace(month=start_date.month % 12 + 1, day=1) - timedelta(
+        days=1
+    )
 
-    days = [(start_date + timedelta(days=i)).date() for i in range((end_date - start_date).days + 1)]
-    days=list(set(days))
+    days = [
+        (start_date + timedelta(days=i)).date()
+        for i in range((end_date - start_date).days + 1)
+    ]
+    days = list(set(days))
     # print(f"cantida dias del mes {len(days)}")
     # days.sort()
     # print(f"{days[0].month if days else '-'} {days[0].year if days else '-'}  {[v.day for v in days]}")
 
     return days
 
+
 def get_dias_laborales(year, month):
-    seleccionados=[]
-    dias=get_days_in_month(year, month)
+    seleccionados = []
+    dias = get_days_in_month(year, month)
     for dia in dias:
         if es_dia_entresemana(dia) and not es_dia_feriado(dia):
             seleccionados.append(dia)
@@ -51,7 +61,9 @@ def get_dias_entre_semana(fecha1, fecha2):
 
     dias = 0
     while fecha_menor <= fecha_mayor:
-        if es_dia_entresemana(fecha_menor):  # Si es un día de la semana (lunes a viernes)
+        if es_dia_entresemana(
+            fecha_menor
+        ):  # Si es un día de la semana (lunes a viernes)
             dias += 1
         fecha_menor += timedelta(days=1)
     if not es_diferencia_positiva:
@@ -101,10 +113,15 @@ def siguiente_dia_laborable(fecha_actual):
     # nombre_dia_semana(siguiente_dia)
     return siguiente_dia
 
+
 def es_dia_entresemana(fecha):
     return fecha.weekday() < 5
+
+
 def es_viernes(fecha):
-    return fecha.weekday()==4
+    return fecha.weekday() == 4
+
+
 def primer_cumpleannos(fecha_nacimiento):
     anno_nacimiento = fecha_nacimiento.year
     primer_cumpleannos = fecha_nacimiento.replace(year=anno_nacimiento + 1)
@@ -130,7 +147,7 @@ def nombre_dia_semana(fecha):
         3: "Jueves",
         4: "Viernes",
         5: "Sábado",
-        6: "Domingo"
+        6: "Domingo",
     }
 
     try:
@@ -140,8 +157,8 @@ def nombre_dia_semana(fecha):
     except ValueError:
         print("Formato de fecha incorrecto. Debe ser en el formato YYYY-MM-DD.")
 
-def get_first_day_of_last_months(cantidad_de_meses):
 
+def get_first_day_of_last_months(cantidad_de_meses):
     """
     Devuelve una lista con el primer día de cada mes de los últimos 30 meses.
 
@@ -154,13 +171,16 @@ def get_first_day_of_last_months(cantidad_de_meses):
     for i in range(30):
         # first_day = date(today.year - (i // 12), today.month - (i % 12) , 1)#+ 1
         try:
-            first_day = date(today.year - (i // 12),  ((today.month + i) % 12)+1 , 1)#+ 1
+            first_day = date(
+                today.year - (i // 12), ((today.month + i) % 12) + 1, 1
+            )  # + 1
         except:
-            print(f"i={i} {today.month} {i % 12} {((today.month + i) % 12)+1 }") #+ 1
+            print(f"i={i} {today.month} {i % 12} {((today.month + i) % 12)+1 }")  # + 1
             assert False
         first_days.append(first_day)
 
     return first_days
+
 
 def get_first_day_of_last_30_months():
     return get_first_day_of_last_months(30)
@@ -190,7 +210,7 @@ def get_cantidad_dias_entre_semana(inicio, fin):
     current_date = inicio
     while current_date <= fin:
         # Verificar si el día es entre semana (lunes a viernes)
-        if current_date.weekday() < 5:
+        if current_date.weekday() < 5 and not es_dia_feriado(current_date):
             dias_entre_semana += 1
         # Avanzar al siguiente día
         current_date += timedelta(days=1)
@@ -198,25 +218,20 @@ def get_cantidad_dias_entre_semana(inicio, fin):
     return dias_entre_semana
 
 
-def get_cantidad_de_horas_entre_semana(inicio, fin,cantidad_maxima_de_dias=None):
-
-
+def get_cantidad_de_horas_entre_semana(inicio, fin, cantidad_maxima_de_dias=None):
     # Inicializar el contador de días entre semana
     suma = 0
-    cantidad_de_dias=0
+    cantidad_de_dias = 0
     # Iterar entre las fechas
     current_date = inicio
     while current_date <= fin:
-
         # Verificar si el día es entre semana (lunes a viernes)
         if current_date.weekday() < 5:
             if cantidad_maxima_de_dias and cantidad_de_dias == cantidad_maxima_de_dias:
                 break
-            suma+=8 if es_viernes(current_date) else 9
+            suma += 8 if es_viernes(current_date) else 9
             cantidad_de_dias += 1
         # Avanzar al siguiente día
         current_date += timedelta(days=1)
 
-
     return suma
-

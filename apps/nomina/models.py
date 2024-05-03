@@ -8,15 +8,19 @@ from django.utils import timezone
 
 # from apps.nomina.utils.util import es_dia_feriado, get_dias_feriado
 from apps.nomina.utils.util_salario import (
-    get_dias_entre_semana,
-    get_first_day_of_last_months,
-    veces_supera_siete,
-    misma_semana,
     dias_restantes_mes,
-    siguiente_dia_laborable,
-    primer_cumpleannos,
-    diferencia_menos_de_5_meses, nombre_dia_semana, es_viernes, get_dias_feriado, get_cantidad_dias_entre_semana,
+    diferencia_menos_de_5_meses,
+    es_viernes,
     get_cantidad_de_horas_entre_semana,
+    get_cantidad_dias_entre_semana,
+    get_dias_entre_semana,
+    get_dias_feriado,
+    get_first_day_of_last_months,
+    misma_semana,
+    nombre_dia_semana,
+    primer_cumpleannos,
+    siguiente_dia_laborable,
+    veces_supera_siete,
 )
 
 
@@ -196,29 +200,39 @@ class SalarioEscala(models.Model):
     )
 
     rango_salarial_1 = models.IntegerField(
-        verbose_name="I",#"Rango Salarial 1",
+        verbose_name="I",  # "Rango Salarial 1",
         default=0,
-        validators=[MinValueValidator(0), ],
+        validators=[
+            MinValueValidator(0),
+        ],
     )
     rango_salarial_2 = models.IntegerField(
-        verbose_name="II",#"Rango Salarial 2",
+        verbose_name="II",  # "Rango Salarial 2",
         default=0,
-        validators=[MinValueValidator(0), ],
+        validators=[
+            MinValueValidator(0),
+        ],
     )
     rango_salarial_3 = models.IntegerField(
-        verbose_name="III",#"Rango Salarial 3",
+        verbose_name="III",  # "Rango Salarial 3",
         default=0,
-        validators=[MinValueValidator(0), ],
+        validators=[
+            MinValueValidator(0),
+        ],
     )
     rango_salarial_4 = models.IntegerField(
-        verbose_name="IV",#"Rango Salarial 4",
+        verbose_name="IV",  # "Rango Salarial 4",
         default=0,
-        validators=[MinValueValidator(0), ],
+        validators=[
+            MinValueValidator(0),
+        ],
     )
     rango_salarial_5 = models.IntegerField(
-        verbose_name="V",#"Rango Salarial 5",
+        verbose_name="V",  # "Rango Salarial 5",
         default=0,
-        validators=[MinValueValidator(0), ],
+        validators=[
+            MinValueValidator(0),
+        ],
     )
     # rango_salarial = models.IntegerField(
     #     choices=(
@@ -334,8 +348,11 @@ class Trabajador(models.Model):
     def __str__(self):
         return f"{self.nombre} {self.apellidos}"
 
+
 def get_horas_correctas():
     return 8 if es_viernes(timezone.now()) else 9
+
+
 class Asistencia(models.Model):
     class Meta:
         unique_together = (("trabajador", "fecha"),)
@@ -363,6 +380,7 @@ class Asistencia(models.Model):
     #     self.es_feriado=es_dia_feriado(self.fecha)
     #     return super().save(*args, **kwargs)
 
+
 class CertificadoMedicoGeneral(models.Model):
     class Meta:
         verbose_name = "Certificado Medico"
@@ -371,26 +389,25 @@ class CertificadoMedicoGeneral(models.Model):
     fecha_inicio = models.DateField(
         verbose_name="Fecha Inicio",
         validators=[date_not_old_validation],
-        null=True,blank=True
+        null=True,
+        blank=True,
     )
     trabajador = models.ForeignKey(
         Trabajador, on_delete=models.CASCADE, verbose_name="Trabajador"
     )
-    ingresado= models.BooleanField(verbose_name="Ingresado", default=False)
-    descripcion=models.TextField(verbose_name="Descripción")
+    ingresado = models.BooleanField(verbose_name="Ingresado", default=False)
+    descripcion = models.TextField(verbose_name="Descripción")
 
-    salario_anual = models.DecimalField(decimal_places=2, max_digits=15,
-                                        verbose_name="Salario Anual",
-                                        validators=[MinValueValidator(0)],
-                                        default=0
-                                        )
-
+    salario_anual = models.DecimalField(
+        decimal_places=2,
+        max_digits=15,
+        verbose_name="Salario Anual",
+        validators=[MinValueValidator(0)],
+        default=0,
+    )
 
     def __str__(self):
-        return (
-            f"{self.trabajador.nombre} {self.trabajador.apellidos}"
-        )
-
+        return f"{self.trabajador.nombre} {self.trabajador.apellidos}"
 
 
 class PrimerCertificadoMedico(models.Model):
@@ -405,10 +422,12 @@ class PrimerCertificadoMedico(models.Model):
         verbose_name="Fecha fin", validators=[date_not_old_validation]
     )
 
-    prestacion_economica = models.DecimalField(decimal_places=2, max_digits=15,
-                                               verbose_name="Prestación Económica", validators=[MinValueValidator(0)]
-                                               )
-
+    prestacion_economica = models.DecimalField(
+        decimal_places=2,
+        max_digits=15,
+        verbose_name="Prestación Económica",
+        validators=[MinValueValidator(0)],
+    )
 
     certificado_medico_general = models.OneToOneField(
         CertificadoMedicoGeneral,
@@ -417,13 +436,12 @@ class PrimerCertificadoMedico(models.Model):
     horas_laborales = models.IntegerField(
         verbose_name="Horas Laborales",
         default=0,
-
     )
     horas_laborales_en_dias_de_carencia = models.IntegerField(
         verbose_name="Carencia",
         default=0,
-
     )
+
     def clean(self):
         super().clean()
         if self.fecha_fin and self.fecha_inicio:
@@ -433,15 +451,13 @@ class PrimerCertificadoMedico(models.Model):
                 )
 
     def __str__(self):
-        return (
-            f"{self.certificado_medico_general.trabajador.nombre} {self.certificado_medico_general.trabajador.apellidos} {self.fecha_inicio}"
-        )
+        return f"{self.certificado_medico_general.trabajador.nombre} {self.certificado_medico_general.trabajador.apellidos} {self.fecha_inicio}"
 
     def calcular_HT(self):
         asistencias = Asistencia.objects.filter(
             trabajador=self.certificado_medico_general.trabajador,
             fecha__year=self.fecha.year,
-            fecha__month=self.fecha.month
+            fecha__month=self.fecha.month,
         )  # .distinct()
 
         suma = 0
@@ -451,35 +467,36 @@ class PrimerCertificadoMedico(models.Model):
 
         return suma
 
-
     def actualizar_pago(self):
-
-        self.certificado_medico_general.salario_anual=calcular_SA(self.fecha_inicio,self.certificado_medico_general.trabajador)
+        self.certificado_medico_general.salario_anual = calcular_SA(
+            self.fecha_inicio, self.certificado_medico_general.trabajador
+        )
         self.certificado_medico_general.save()
-        SA=self.certificado_medico_general.salario_anual
-        X=SA/12
-        Y=float(X) / float(190.6)
+        SA = self.certificado_medico_general.salario_anual
+        X = SA / 12
+        Y = float(X) / float(190.6)
         if not self.certificado_medico_general.ingresado:
-            Z = Y * 60/100
+            Z = Y * 60 / 100
         else:
             Z = Y * 50 / 100
         HT = get_cantidad_de_horas_entre_semana(self.fecha_inicio, self.fecha_fin)
         self.horas_laborales = HT
 
-        self.certificado_medico_general.fecha_inicio=self.fecha_inicio
+        self.certificado_medico_general.fecha_inicio = self.fecha_inicio
         self.certificado_medico_general.save()
-        DC=get_cantidad_de_horas_entre_semana(self.fecha_inicio,self.fecha_fin,
-                                              cantidad_maxima_de_dias=3)
-        self.horas_laborales_en_dias_de_carencia=DC
+        DC = get_cantidad_de_horas_entre_semana(
+            self.fecha_inicio, self.fecha_fin, cantidad_maxima_de_dias=3
+        )
+        self.horas_laborales_en_dias_de_carencia = DC
         C = Z * (HT - DC)
 
-
-        self.prestacion_economica=C
-
+        self.prestacion_economica = C
 
     def save(self, *args, **kwargs):
         self.actualizar_pago()
         return super().save(*args, **kwargs)
+
+
 class ExtraCertificadoMedico(models.Model):
     class Meta:
         verbose_name = "Certificado Medico Extra"
@@ -492,10 +509,12 @@ class ExtraCertificadoMedico(models.Model):
         verbose_name="Fecha fin", validators=[date_not_old_validation]
     )
 
-    prestacion_economica = models.DecimalField(decimal_places=2, max_digits=15,
-                                               verbose_name="Prestación Económica", validators=[MinValueValidator(0)]
-                                               )
-
+    prestacion_economica = models.DecimalField(
+        decimal_places=2,
+        max_digits=15,
+        verbose_name="Prestación Económica",
+        validators=[MinValueValidator(0)],
+    )
 
     certificado_medico_general = models.ForeignKey(
         CertificadoMedicoGeneral,
@@ -504,13 +523,12 @@ class ExtraCertificadoMedico(models.Model):
     horas_laborales = models.IntegerField(
         verbose_name="Horas Laborales",
         default=0,
-
     )
     horas_laborales_en_dias_de_carencia = models.IntegerField(
         verbose_name="Carencia",
         default=0,
-
     )
+
     def clean(self):
         super().clean()
         if self.fecha_fin and self.fecha_inicio:
@@ -520,15 +538,13 @@ class ExtraCertificadoMedico(models.Model):
                 )
 
     def __str__(self):
-        return (
-            f"{self.certificado_medico_general.trabajador.nombre} {self.certificado_medico_general.trabajador.apellidos} {self.fecha_inicio}"
-        )
+        return f"{self.certificado_medico_general.trabajador.nombre} {self.certificado_medico_general.trabajador.apellidos} {self.fecha_inicio}"
 
     def calcular_HT(self):
         asistencias = Asistencia.objects.filter(
             trabajador=self.certificado_medico_general.trabajador,
             fecha__year=self.fecha.year,
-            fecha__month=self.fecha.month
+            fecha__month=self.fecha.month,
         )  # .distinct()
 
         suma = 0
@@ -538,20 +554,25 @@ class ExtraCertificadoMedico(models.Model):
 
         return suma
 
-
     def actualizar_pago(self):
-        primer_certificado:PrimerCertificadoMedico =PrimerCertificadoMedico.objects.filter(certificado_medico_general=self.certificado_medico_general).first()
-        if self.certificado_medico_general.salario_anual==0:
-            fecha_incio=self.fecha_inicio
+        primer_certificado: PrimerCertificadoMedico = (
+            PrimerCertificadoMedico.objects.filter(
+                certificado_medico_general=self.certificado_medico_general
+            ).first()
+        )
+        if self.certificado_medico_general.salario_anual == 0:
+            fecha_incio = self.fecha_inicio
             if primer_certificado:
-                fecha_incio=primer_certificado.fecha_inicio
-            self.certificado_medico_general.salario_anual=calcular_SA(fecha_incio,self.certificado_medico_general.trabajador)
+                fecha_incio = primer_certificado.fecha_inicio
+            self.certificado_medico_general.salario_anual = calcular_SA(
+                fecha_incio, self.certificado_medico_general.trabajador
+            )
             self.certificado_medico_general.save()
-        SA=self.certificado_medico_general.salario_anual
-        X=SA/12
-        Y=float(X) / float(190.6)
+        SA = self.certificado_medico_general.salario_anual
+        X = SA / 12
+        Y = float(X) / float(190.6)
         if not self.certificado_medico_general.ingresado:
-            Z = Y * 60/100
+            Z = Y * 60 / 100
         else:
             Z = Y * 50 / 100
         HT = get_cantidad_de_horas_entre_semana(self.fecha_inicio, self.fecha_fin)
@@ -559,8 +580,7 @@ class ExtraCertificadoMedico(models.Model):
 
         C = Z * HT
 
-        self.prestacion_economica=C
-
+        self.prestacion_economica = C
 
     def save(self, *args, **kwargs):
         self.actualizar_pago()
@@ -580,12 +600,8 @@ class LicenciaMaternidad(models.Model):
         verbose_name="Fecha Inicio", validators=[date_not_old_validation]
     )
 
-
-
     def __str__(self):
         return f"{self.trabajador.nombre} {self.trabajador.apellidos}"
-
-
 
 
 class LicenciaPrenatal(models.Model):
@@ -614,14 +630,23 @@ class LicenciaPrenatal(models.Model):
     )
     es_simple = models.BooleanField(default=True)
 
-    prestacion_economica = models.DecimalField(decimal_places=2, max_digits=15,
-        verbose_name="Prestación Económica", validators=[MinValueValidator(0)]
+    prestacion_economica = models.DecimalField(
+        decimal_places=2,
+        max_digits=15,
+        verbose_name="Prestación Económica",
+        validators=[MinValueValidator(0)],
     )
-    importe_semanal = models.DecimalField(decimal_places=2, max_digits=15,
-        verbose_name="Prestación Económica", validators=[MinValueValidator(0)]
+    importe_semanal = models.DecimalField(
+        decimal_places=2,
+        max_digits=15,
+        verbose_name="Prestación Económica",
+        validators=[MinValueValidator(0)],
     )
-    salario_anual = models.DecimalField(decimal_places=2, max_digits=15,
-        verbose_name="Salario Anual", validators=[MinValueValidator(0)]
+    salario_anual = models.DecimalField(
+        decimal_places=2,
+        max_digits=15,
+        verbose_name="Salario Anual",
+        validators=[MinValueValidator(0)],
     )
 
     def clean(self):
@@ -642,7 +667,7 @@ class LicenciaPrenatal(models.Model):
         )
 
     def save(self, *args, **kwargs):
-        #nombre_dia_semana(self.fecha_inicio)
+        # nombre_dia_semana(self.fecha_inicio)
         fecha_de_inicio_del_embarazo = self.fecha_inicio
         self.salario_anual = calcular_SA(
             fecha=fecha_de_inicio_del_embarazo, trabajador=self.trabajador
@@ -655,10 +680,15 @@ class LicenciaPrenatal(models.Model):
         return super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
-
-        PrimeraLicenciaPosnatal.objects.filter(licencia_maternidad=self.licencia_maternidad).delete()
-        SegundaLicenciaPosnatal.objects.filter(licencia_maternidad=self.licencia_maternidad).delete()
-        PrestacionSocial.objects.filter(licencia_maternidad=self.licencia_maternidad).delete()
+        PrimeraLicenciaPosnatal.objects.filter(
+            licencia_maternidad=self.licencia_maternidad
+        ).delete()
+        SegundaLicenciaPosnatal.objects.filter(
+            licencia_maternidad=self.licencia_maternidad
+        ).delete()
+        PrestacionSocial.objects.filter(
+            licencia_maternidad=self.licencia_maternidad
+        ).delete()
         return super().delete(*args, **kwargs)
 
 
@@ -680,10 +710,11 @@ class PrimeraLicenciaPosnatal(models.Model):
     #     verbose_name="Licencia Prenatal",
     #
     # )
-    prestacion_economica = models.DecimalField(decimal_places=2, max_digits=15,
+    prestacion_economica = models.DecimalField(
+        decimal_places=2,
+        max_digits=15,
         verbose_name="Prestación Económica",
         validators=[MinValueValidator(0)],
-
     )
     licencia_maternidad = models.OneToOneField(
         LicenciaMaternidad,
@@ -712,7 +743,7 @@ class PrimeraLicenciaPosnatal(models.Model):
         es_nuevo = self.pk is None
         fecha_de_inicio_del_embarazo = self.fecha_inicio
         if self.licencia_maternidad:
-            licencia_prenatal=self.licencia_maternidad.licenciaprenatal
+            licencia_prenatal = self.licencia_maternidad.licenciaprenatal
             if licencia_prenatal:
                 ISP = (
                     licencia_prenatal.importe_semanal
@@ -754,12 +785,17 @@ class PrimeraLicenciaPosnatal(models.Model):
         return response
 
     def delete(self, *args, **kwargs):
-        SegundaLicenciaPosnatal.objects.filter(licencia_maternidad=self.licencia_maternidad).delete()
-        PrestacionSocial.objects.filter(licencia_maternidad=self.licencia_maternidad).delete()
+        SegundaLicenciaPosnatal.objects.filter(
+            licencia_maternidad=self.licencia_maternidad
+        ).delete()
+        PrestacionSocial.objects.filter(
+            licencia_maternidad=self.licencia_maternidad
+        ).delete()
         return super().delete(*args, **kwargs)
 
     def __str__(self):
         return f"{self.licencia_maternidad.trabajador.nombre}"
+
 
 class SegundaLicenciaPosnatal(models.Model):
     class Meta:
@@ -779,10 +815,11 @@ class SegundaLicenciaPosnatal(models.Model):
     #     verbose_name="Primera Licencia Posnatal",
     #
     # )
-    prestacion_economica =models.DecimalField(decimal_places=2, max_digits=15,
+    prestacion_economica = models.DecimalField(
+        decimal_places=2,
+        max_digits=15,
         verbose_name="Prestación Económica",
         validators=[MinValueValidator(0)],
-
     )
     licencia_maternidad = models.OneToOneField(
         LicenciaMaternidad,
@@ -800,20 +837,21 @@ class SegundaLicenciaPosnatal(models.Model):
     def save(self, *args, **kwargs):
         es_nuevo = self.pk is None
         if self.licencia_maternidad:
-            licencia_prenatal=self.licencia_maternidad.licenciaprenatal
+            licencia_prenatal = self.licencia_maternidad.licenciaprenatal
             if licencia_prenatal:
-                self.prestacion_economica = (
-                    licencia_prenatal.prestacion_economica
-                )
+                self.prestacion_economica = licencia_prenatal.prestacion_economica
         response = super().save(*args, **kwargs)
 
         crear_PrestacionSocial(
             self,
-            PrestacionSocial.objects.filter(licencia_maternidad=self.licencia_maternidad).first()
+            PrestacionSocial.objects.filter(
+                licencia_maternidad=self.licencia_maternidad
+            ).first()
             if not es_nuevo
             else None,
         )
         return response
+
     def __str__(self):
         return f"{self.licencia_maternidad.trabajador.nombre}"
 
@@ -824,8 +862,8 @@ def crear_SegundaLicenciaPosnatal(primera: PrimeraLicenciaPosnatal, segunda=None
     segunda.fecha_inicio = siguiente_dia_laborable(primera.fecha_fin)
     licencia_maternidad = primera.licencia_maternidad
     if licencia_maternidad:
-        segunda.licencia_maternidad=licencia_maternidad
-        licencia_prenatal=licencia_maternidad.licenciaprenatal
+        segunda.licencia_maternidad = licencia_maternidad
+        licencia_prenatal = licencia_maternidad.licenciaprenatal
         if licencia_prenatal:
             cantidad_semanas = 6 if licencia_prenatal.es_simple else 8
             segunda.fecha_fin = segunda.fecha_inicio + timedelta(weeks=cantidad_semanas)
@@ -851,10 +889,11 @@ class PrestacionSocial(models.Model):
     #     verbose_name="Segunda Licencia Posnatal",
     #
     # )
-    prestacion_economica = models.DecimalField(decimal_places=2, max_digits=15,
+    prestacion_economica = models.DecimalField(
+        decimal_places=2,
+        max_digits=15,
         verbose_name="Prestación Económica",
         validators=[MinValueValidator(0)],
-
     )
     licencia_maternidad = models.OneToOneField(
         LicenciaMaternidad,
@@ -872,7 +911,7 @@ class PrestacionSocial(models.Model):
     def save(self, *args, **kwargs):
         cantidad_de_dias = dias_restantes_mes(self.fecha_inicio)
         if self.licencia_maternidad:
-            licencia_prenatal=self.licencia_maternidad.licenciaprenatal
+            licencia_prenatal = self.licencia_maternidad.licenciaprenatal
             if licencia_prenatal:
                 SA = licencia_prenatal.salario_anual
                 PM = (SA / 12) * 60 / 100
@@ -890,31 +929,85 @@ def crear_PrestacionSocial(segunda: SegundaLicenciaPosnatal, prestacion=None):
     if not prestacion:
         prestacion = PrestacionSocial()
     prestacion.fecha_inicio = siguiente_dia_laborable(segunda.fecha_fin)
-    licencia_maternidad=segunda.licencia_maternidad
+    licencia_maternidad = segunda.licencia_maternidad
     if licencia_maternidad:
-        primera_licencia_posnatal=licencia_maternidad.primeralicenciaposnatal
+        primera_licencia_posnatal = licencia_maternidad.primeralicenciaposnatal
         if primera_licencia_posnatal:
             prestacion.fecha_fin = primer_cumpleannos(
                 primera_licencia_posnatal.fecha_inicio
             )
-        prestacion.licencia_maternidad=licencia_maternidad
+        prestacion.licencia_maternidad = licencia_maternidad
     prestacion.save()
 
 
 class PagoPorUtilidadesAnuales(models.Model):
+    class Meta:
+        verbose_name = "Utilidad Anual"
+        verbose_name_plural = "Utilidades Anuales"
+
     fecha = models.DateField(verbose_name="Fecha", default=timezone.now)
-    pago = models.DecimalField(decimal_places=2, max_digits=15,
-        verbose_name="Pago Por Utilidades", validators=[MinValueValidator(0)]
+    pago = models.DecimalField(
+        decimal_places=2,
+        max_digits=15,
+        verbose_name="Pago Por Utilidades",
+        validators=[MinValueValidator(0)],
+    )
+    pago_extra = models.DecimalField(
+        decimal_places=2,
+        max_digits=15,
+        verbose_name="Extra",
+        default=0,
+        validators=[MinValueValidator(0)],
     )
     trabajador = models.ForeignKey(
         Trabajador, on_delete=models.CASCADE, verbose_name="Trabajador"
     )
+    dinero_a_repartir = models.DecimalField(
+        decimal_places=2,
+        max_digits=15,
+        verbose_name="Dinero a Repartir",
+        default=0,
+        validators=[MinValueValidator(0)],
+    )
+    salario_anual = models.DecimalField(
+        decimal_places=2,
+        max_digits=15,
+        verbose_name="Salario Anual",
+    )
+    tiempo_real_trabajado_en_dias = models.IntegerField(
+        verbose_name="Tiempo Real Trabajado en días ", default=0
+    )
+
+    def calcular_pago(self):
+        fin = self.fecha.replace(year=self.fecha.year - 1, month=12, day=31)
+        inicio = self.fecha.replace(year=self.fecha.year - 1, month=1, day=1)
+        self.salario_anual = calcular_SA(fecha=fin, trabajador=self.trabajador)
+        SA = self.salario_anual
+        self.tiempo_real_trabajado_en_dias = get_cantidad_dias_entre_semana(inicio, fin)
+        TRT = self.tiempo_real_trabajado_en_dias
+        K = SA / TRT
+
+        P = SA / 12
+        if P == 0 or TRT == 0:
+            print(f"SA {SA} TRT {TRT}")
+            return
+        O = self.dinero_a_repartir
+        L = O / P
+        UA = K * L
+        self.pago = UA
+
+    # def save(self, *args, **kwargs):
+    #     self.calcular_pago()
+    #     return super().save(*args, **kwargs)
 
 
 class PagoPorSubsidios(models.Model):
     fecha = models.DateField(verbose_name="Fecha", default=timezone.now)
-    pago = models.DecimalField(decimal_places=2, max_digits=15,
-        verbose_name="Pago Por Subsidios", validators=[MinValueValidator(0)]
+    pago = models.DecimalField(
+        decimal_places=2,
+        max_digits=15,
+        verbose_name="Pago Por Subsidios",
+        validators=[MinValueValidator(0)],
     )
     trabajador = models.ForeignKey(
         Trabajador, on_delete=models.CASCADE, verbose_name="Trabajador"
@@ -925,40 +1018,46 @@ class SalarioMensualTotalPagado(models.Model):
     class Meta:
         verbose_name = "Salario Mensual"
         verbose_name_plural = "Salarios Mensuales"
-    EVALUACIONES=[
-            (
-                "D",
-                "Deficiente",
-            ),
-            (
-                "R",
-                "Regular",
-            ),
-            (
-                "B",
-                "Bien",
-            ),
-            (
-                "MB",
-                "Muy Bien",
-            ),
-            (
-                "E",
-                "Excelente",
-            ),
-        ]
+
+    EVALUACIONES = [
+        (
+            "D",
+            "Deficiente",
+        ),
+        (
+            "R",
+            "Regular",
+        ),
+        (
+            "B",
+            "Bien",
+        ),
+        (
+            "MB",
+            "Muy Bien",
+        ),
+        (
+            "E",
+            "Excelente",
+        ),
+    ]
     fecha = models.DateField(verbose_name="Fecha", default=timezone.now)
     trabajador = models.ForeignKey(
         Trabajador, on_delete=models.CASCADE, verbose_name="Trabajador"
     )
-    salario_devengado_mensual = models.DecimalField(decimal_places=2, max_digits=15,
+    salario_devengado_mensual = models.DecimalField(
+        decimal_places=2,
+        max_digits=15,
         verbose_name="Salario Devengado Mensual",
-        validators=[MinValueValidator(0)]
+        validators=[MinValueValidator(0)],
     )
-    salario_basico_mensual = models.DecimalField(decimal_places=2, max_digits=15,
-        verbose_name="Salario Basico Mensual", validators=[MinValueValidator(0)]
+    salario_basico_mensual = models.DecimalField(
+        decimal_places=2,
+        max_digits=15,
+        verbose_name="Salario Basico Mensual",
+        validators=[MinValueValidator(0)],
     )
-    evaluacion_obtenida_por_el_jefe=models.CharField(
+    evaluacion_obtenida_por_el_jefe = models.CharField(
         verbose_name="Evaluación",
         max_length=256,
         choices=EVALUACIONES,
@@ -982,28 +1081,29 @@ class SalarioMensualTotalPagado(models.Model):
     evaluacion_obtenida_por_el_jefe_en_puntos = models.IntegerField(
         verbose_name="Puntos", validators=[MinValueValidator(0)]
     )
-    horas_trabajadas=models.IntegerField(
+    horas_trabajadas = models.IntegerField(
         verbose_name="Horas Trabajadas", validators=[MinValueValidator(0)]
     )
-    pago_por_dias_feriados = models.DecimalField(decimal_places=2, max_digits=15,
-                                                 verbose_name="Pago Dias Feriados",
-                                                 validators=[MinValueValidator(0)]
-                                                 )
+    pago_por_dias_feriados = models.DecimalField(
+        decimal_places=2,
+        max_digits=15,
+        verbose_name="Pago Dias Feriados",
+        validators=[MinValueValidator(0)],
+    )
 
     def get_evalucacion_str(self):
         for evaluacion in self.EVALUACIONES:
-            if self.evaluacion_obtenida_por_el_jefe ==evaluacion[0]:
+            if self.evaluacion_obtenida_por_el_jefe == evaluacion[0]:
                 return evaluacion[1]
         return ""
-    
 
     def calcular_cantidad_de_horas_trabajadas_este_mes(self):
         # return calcular_cantidad_de_horas_trabajadas_por_mes(self.fecha)
-        asistencias=Asistencia.objects.filter(
+        asistencias = Asistencia.objects.filter(
             trabajador=self.trabajador,
             fecha__year=self.fecha.year,
-            fecha__month=self.fecha.month
-        )#.distinct()
+            fecha__month=self.fecha.month,
+        )  # .distinct()
         # print(len(asistencias))
         # lista=[v.fecha.day for v in asistencias]
         # lista.sort()
@@ -1012,80 +1112,85 @@ class SalarioMensualTotalPagado(models.Model):
         # lista = [v.id for v in asistencias]
         # lista.sort()
         # print(lista)
-        suma=0
+        suma = 0
         for asistencia in asistencias:
-            suma+=asistencia.horas_trabajadas
+            suma += asistencia.horas_trabajadas
         # print(suma)
-        
-        return suma
-    def calcular_pago_cantidad_de_horas_trabajadas_este_mes_feriados(self):
-        
 
-        suma=0
-        
+        return suma
+
+    def calcular_pago_cantidad_de_horas_trabajadas_este_mes_feriados(self):
+        suma = 0
+
         # print(suma)
-        dias_feriados=get_dias_feriado(self.fecha.month)
+        dias_feriados = get_dias_feriado(self.fecha.month)
         if dias_feriados:
             SDSA = calcular_SDSA(self.fecha, self.trabajador)
-            cantidad_de_horas_trabajadas_en_los_6_meses=calcular_cantidad_de_horas_trabajadas_de_los_ultimos(self.trabajador,6)
+            cantidad_de_horas_trabajadas_en_los_6_meses = (
+                calcular_cantidad_de_horas_trabajadas_de_los_ultimos(self.trabajador, 6)
+            )
 
-            TH=SDSA/cantidad_de_horas_trabajadas_en_los_6_meses
+            TH = SDSA / cantidad_de_horas_trabajadas_en_los_6_meses
             for dia in dias_feriados:
-                viernes=es_viernes(self.fecha.replace(day=dia))
+                viernes = es_viernes(self.fecha.replace(day=dia))
                 # print(f"SDSA {SDSA}")
-                suma +=(9 if not viernes else 8)#len(dias_feriados)*
+                suma += 9 if not viernes else 8  # len(dias_feriados)*
 
-            suma*=TH
+            suma *= TH
         return suma
+
     def actualizar_pago(self):
-        puntos=self.evaluacion_obtenida_por_el_jefe_en_puntos
-        if puntos<60:
+        puntos = self.evaluacion_obtenida_por_el_jefe_en_puntos
+        if puntos < 60:
             evaluacion = "D"
-        elif puntos >=60 and puntos<=79:
+        elif puntos >= 60 and puntos <= 79:
             evaluacion = "R"
-        elif puntos >=80 and puntos<=89:
+        elif puntos >= 80 and puntos <= 89:
             evaluacion = "B"
-        elif puntos >=90 and puntos<=96:
+        elif puntos >= 90 and puntos <= 96:
             evaluacion = "B"
         else:
             evaluacion = "E"
-        self.evaluacion_obtenida_por_el_jefe=evaluacion#self.trabajador.salario_escala
-        salario_escala=self.trabajador.salario_escala
+        self.evaluacion_obtenida_por_el_jefe = (
+            evaluacion  # self.trabajador.salario_escala
+        )
+        salario_escala = self.trabajador.salario_escala
         if evaluacion == "D":
-            salario_basico_seleccionado=salario_escala.rango_salarial_1
+            salario_basico_seleccionado = salario_escala.rango_salarial_1
         elif evaluacion == "R":
-            salario_basico_seleccionado=salario_escala.rango_salarial_2
+            salario_basico_seleccionado = salario_escala.rango_salarial_2
         elif evaluacion == "B":
-            salario_basico_seleccionado=salario_escala.rango_salarial_3
+            salario_basico_seleccionado = salario_escala.rango_salarial_3
         elif evaluacion == "MB":
-            salario_basico_seleccionado=salario_escala.rango_salarial_4
+            salario_basico_seleccionado = salario_escala.rango_salarial_4
         elif evaluacion == "E":
-            salario_basico_seleccionado=salario_escala.rango_salarial_5
+            salario_basico_seleccionado = salario_escala.rango_salarial_5
         else:
-            salario_basico_seleccionado=0
+            salario_basico_seleccionado = 0
 
-        self.salario_basico_mensual=salario_basico_seleccionado
-        self.horas_trabajadas=self.calcular_cantidad_de_horas_trabajadas_este_mes()
+        self.salario_basico_mensual = salario_basico_seleccionado
+        self.horas_trabajadas = self.calcular_cantidad_de_horas_trabajadas_este_mes()
         # if self.horas_trabajadas>
         self.salario_devengado_mensual = salario_basico_seleccionado
         # self.salario_devengado_mensual*= self.evaluacion_obtenida_por_el_jefe_en_puntos / 100
-        self.salario_devengado_mensual /=  190.6
-        a_float=float(self.salario_devengado_mensual)
-        resultado=a_float*float(self.horas_trabajadas)
-        self.salario_devengado_mensual=resultado
+        self.salario_devengado_mensual /= 190.6
+        a_float = float(self.salario_devengado_mensual)
+        resultado = a_float * float(self.horas_trabajadas)
+        self.salario_devengado_mensual = resultado
         # if self.pago_por_utilidades_anuales.pago_por_utilidades:
         #     self.salario_devengado_mensual -= self.pago_por_utilidades.pago
         if self.pago_por_subsidios:
             self.salario_devengado_mensual -= self.pago_por_subsidios.pago
-        
-        #a_float=float(self.salario_devengado_mensual)
-        self.pago_por_dias_feriados=self.calcular_pago_cantidad_de_horas_trabajadas_este_mes_feriados()
-        resultado=float(self.pago_por_dias_feriados)
-        self.salario_devengado_mensual+=resultado
 
-        if self.salario_devengado_mensual>20000:
+        # a_float=float(self.salario_devengado_mensual)
+        self.pago_por_dias_feriados = (
+            self.calcular_pago_cantidad_de_horas_trabajadas_este_mes_feriados()
+        )
+        resultado = float(self.pago_por_dias_feriados)
+        self.salario_devengado_mensual += resultado
+
+        if self.salario_devengado_mensual > 20000:
             print(f"exedio")
-
 
     def save(self, *args, **kwargs):
         self.actualizar_pago()
@@ -1104,29 +1209,33 @@ def calcular_cantidad_de_horas_trabajadas_de_los_ultimos(trabajador, cantidad_de
     # fecha_limite_inferior.replace(day=1)
     TH = (
         SalarioMensualTotalPagado.objects.filter(
-            #fecha__gte=fecha_limite_inferior, 
+            # fecha__gte=fecha_limite_inferior,
             trabajador=trabajador
         )
         .order_by("-fecha")[:cantidad_de_meses]
         .aggregate(total=Sum("horas_trabajadas"))["total"]
     )
     return TH if TH else 0
+
+
 def calcular_suma_salario(fecha, trabajador, cantidad_de_meses):
     # fecha_limite_inferior = fecha - timezone.timedelta(days=365)
     # fecha_limite_inferior.replace(day=1)
     SA = (
         SalarioMensualTotalPagado.objects.filter(
-            # fecha__gte=fecha_limite_inferior, 
-            fecha__lte=fecha, 
-            trabajador=trabajador
+            # fecha__gte=fecha_limite_inferior,
+            fecha__lte=fecha,
+            trabajador=trabajador,
         )
         .order_by("-fecha")[:cantidad_de_meses]
         .aggregate(total=Sum("salario_devengado_mensual"))["total"]
     )
     return SA if SA else 0
+
+
 def calcular_SA(fecha, trabajador):
     return calcular_suma_salario(fecha, trabajador, 12)
 
+
 def calcular_SDSA(fecha, trabajador):
     return calcular_suma_salario(fecha, trabajador, 6)
-

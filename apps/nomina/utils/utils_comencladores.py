@@ -113,14 +113,14 @@ def crear_salarios_escalas_default():
 
     def crear_salarios_escalas(
         grupo_complejidad,
-            #rango_salarial,
-            grupo_escala,
-            lista_salarios,# grupo_escala, salario
+        # rango_salarial,
+        grupo_escala,
+        lista_salarios,  # grupo_escala, salario
     ):
         if not SalarioEscala.objects.filter(
             grupo_complejidad=grupo_complejidad,
             grupo_escala=grupo_escala,
-            #rango_salarial=rango_salarial,
+            # rango_salarial=rango_salarial,
         ).exists():
             salario_escala = SalarioEscala()
             salario_escala.grupo_complejidad = grupo_complejidad
@@ -140,9 +140,7 @@ def crear_salarios_escalas_default():
         for i, v in enumerate(datos_actuales):
             grupo_escala = v[0]
 
-            crear_salarios_escalas(
-                complejidad, grupo_escala, v[1]
-            )
+            crear_salarios_escalas(complejidad, grupo_escala, v[1])
 
             # for j, salario in enumerate(v[1]):
             #     grupo_complejidad = complejidad
