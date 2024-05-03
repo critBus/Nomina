@@ -198,19 +198,25 @@ def get_cantidad_dias_entre_semana(inicio, fin):
     return dias_entre_semana
 
 
-def get_cantidad_de_horas_entre_semana(inicio, fin):
+def get_cantidad_de_horas_entre_semana(inicio, fin,cantidad_maxima_de_dias=None):
 
 
     # Inicializar el contador de días entre semana
     suma = 0
-
+    cantidad_de_dias=0
     # Iterar entre las fechas
     current_date = inicio
     while current_date <= fin:
+
         # Verificar si el día es entre semana (lunes a viernes)
         if current_date.weekday() < 5:
+            if cantidad_maxima_de_dias and cantidad_de_dias == cantidad_maxima_de_dias:
+                break
             suma+=8 if es_viernes(current_date) else 9
+            cantidad_de_dias += 1
         # Avanzar al siguiente día
         current_date += timedelta(days=1)
 
+
     return suma
+

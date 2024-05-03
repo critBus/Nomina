@@ -357,24 +357,52 @@ class AsistenciaAdmin(admin.ModelAdmin):
     )
     date_hierarchy = "fecha"
 
+class PrimerCertificadoMedicoInline(admin.StackedInline):
+    model = PrimerCertificadoMedico
+    extra = 1
+    readonly_fields = (
 
-@admin.register(CertificadoMedico)
-class CertificadoMedicoAdmin(admin.ModelAdmin):
-    readonly_fields = ("prestacion_economica",)
-    list_display = ("fecha_inicio", "fecha_fin", "trabajador")
+        "prestacion_economica",
+        "horas_laborales",
+        "horas_laborales_en_dias_de_carencia",
+    )
+    min_num = 1
+    can_delete = False
+
+class ExtraCertificadoMedicoInline(admin.StackedInline):
+    model = ExtraCertificadoMedico
+    extra = 1
+    readonly_fields = (
+
+        "prestacion_economica",
+        "horas_laborales",
+        "horas_laborales_en_dias_de_carencia",
+    )
+
+
+    # def has_delete_permission(self, request, obj=None):
+    #     return obj and obj.es_primero()
+@admin.register(CertificadoMedicoGeneral)
+class CertificadoMedicoGeneralAdmin(admin.ModelAdmin):
+    inlines = [
+        PrimerCertificadoMedicoInline,ExtraCertificadoMedicoInline
+
+    ]
+    readonly_fields = ("salario_anual","fecha_inicio",)
+    list_display = ("fecha_inicio", "trabajador","ingresado",)
     search_fields = (
         "fecha_inicio",
-        "fecha_fin",
+        "ingresado",
         "trabajador__nombre",
     )
     list_filter = (
         "fecha_inicio",
-        "fecha_fin",
+        "ingresado",
         "trabajador",
     )
     ordering = (
         "fecha_inicio",
-        "fecha_fin",
+        "ingresado",
         "trabajador",
     )
     date_hierarchy = "fecha_inicio"

@@ -1,6 +1,7 @@
 from .util_salario import get_first_day_of_last_30_months, get_dias_laborales, es_viernes
 from ..models import Trabajador, SalarioEscala, SalarioMensualTotalPagado, LicenciaMaternidad, LicenciaPrenatal, \
-    PrimeraLicenciaPosnatal, SegundaLicenciaPosnatal, PrestacionSocial, Asistencia,CertificadoMedico
+    PrimeraLicenciaPosnatal, SegundaLicenciaPosnatal, PrestacionSocial, Asistencia, CertificadoMedicoGeneral, \
+    PrimerCertificadoMedico,ExtraCertificadoMedico
 from faker import Faker
 import random
 from datetime import datetime, timedelta
@@ -24,7 +25,9 @@ def create_fake_trabajadores(num_trabajadores=20):
     salarios = SalarioEscala.objects.all()
     if Trabajador.objects.count()==0 and salarios.count()>21:
 
-        for _ in range(num_trabajadores):
+        for i in range(num_trabajadores):
+            # if i>1:
+            #     break
             Trabajador.objects.create(
                 carnet=fake.unique.numerify(text="############"),
                 nombre=fake.first_name(),
@@ -76,16 +79,31 @@ def create_fake_trabajadores(num_trabajadores=20):
                 salario.trabajador = trabajador
                 salario.save()
 
+            #ejemplo1
+            # certificadogeneral = CertificadoMedicoGeneral()
+            # certificadogeneral.descripcion = "la descripcion"
+            # certificadogeneral.trabajador = trabajador
+            # certificadogeneral.ingresado = random.randint(1, 3) == 2
+            # certificadogeneral.save()
 
-        # for trabajador in trabajadores:
-        #     for fecha in ultimos_30_meses:
-        #         salario=SalarioMensualTotalPagado()
-        #         salario.salario_basico_mensual=trabajador.salario_escala.salario
-        #         salario.salario_devengado_mensual=salario.salario_basico_mensual+random.randint(1, 1000)
-        #         salario.fecha=fecha
-        #         salario.trabajador=trabajador
-        #         salario.save()
-        #
+
+            # certificado=CertificadoMedico()
+            # certificado.certificado_medico_general=certificadogeneral
+            # certificado.fecha_inicio=timezone.now()
+            # certificado.fecha_fin=certificado.fecha_inicio+timedelta(weeks=random.randint(5,8))
+            # certificado.save()
+
+            # ultima_fecha=certificado.fecha_fin
+            
+            # certificado2 = CertificadoMedico()
+            # certificado2.certificado_medico_general = certificadogeneral
+            # certificado2.fecha_inicio = ultima_fecha+timedelta(days=1)
+            # certificado2.fecha_fin = certificado.fecha_inicio + timedelta(weeks=random.randint(5, 8))
+            # certificado2.save()
+            #fin ejemplo1
+
+
+
         for i,trabajador in enumerate(trabajadores):
             if i<5:
                 licencia_maternidad=LicenciaMaternidad()
@@ -111,12 +129,26 @@ def create_fake_trabajadores(num_trabajadores=20):
                     primera.fecha_fin=primera.fecha_inicio + timedelta(weeks=6)
                     primera.save()
             if i>5 and i<10:
-                certificado=CertificadoMedico()
+                certificadogeneral = CertificadoMedicoGeneral()
+                certificadogeneral.descripcion = "la descripcion"
+                certificadogeneral.trabajador = trabajador
+                certificadogeneral.ingresado = random.randint(1, 3) == 2
+                certificadogeneral.save()
+
+
+                certificado=PrimerCertificadoMedico()
+                certificado.certificado_medico_general=certificadogeneral
                 certificado.fecha_inicio=timezone.now()
                 certificado.fecha_fin=certificado.fecha_inicio+timedelta(weeks=random.randint(5,8))
-                certificado.trabajador=trabajador
-                certificado.ingresado=random.randint(1,3)==2
                 certificado.save()
+
+                ultima_fecha=certificado.fecha_fin
+                for j in range(random.randint(0, 2)):
+                    certificado2 = ExtraCertificadoMedico()
+                    certificado2.certificado_medico_general = certificadogeneral
+                    certificado2.fecha_inicio = ultima_fecha+timedelta(days=1)
+                    certificado2.fecha_fin = certificado.fecha_inicio + timedelta(weeks=random.randint(5, 8))
+                    certificado2.save()
 
 
 
