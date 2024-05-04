@@ -409,20 +409,24 @@ class SalarioMensualTotalPagadoAdmin(admin.ModelAdmin):
         "evaluacion_obtenida_por_el_jefe",
         "horas_trabajadas",
         "pago_por_dias_feriados",
+        "pago_certificados_medicos",
+        "pago_certificados_maternidad",
+        "pago_utilidades",
+        "pago_total",
     )
     list_display = (
         "fecha",
         "trabajador",
+        "pago_total",
         "salario_devengado_mensual",
         "evaluacion_obtenida_por_el_jefe",
-        "evaluacion_obtenida_por_el_jefe_en_puntos",
     )
     search_fields = (
         "fecha",
         "trabajador__nombre",
+        "pago_total",
         "salario_devengado_mensual",
         "evaluacion_obtenida_por_el_jefe",
-        "evaluacion_obtenida_por_el_jefe_en_puntos",
     )
     list_filter = (
         "fecha",
@@ -434,7 +438,7 @@ class SalarioMensualTotalPagadoAdmin(admin.ModelAdmin):
         "trabajador",
         "salario_devengado_mensual",
         "evaluacion_obtenida_por_el_jefe",
-        "evaluacion_obtenida_por_el_jefe_en_puntos",
+        "pago_total",
     )
     date_hierarchy = "fecha"
 
@@ -444,6 +448,7 @@ class PagoPorUtilidadesAnualesAdmin(admin.ModelAdmin):
     readonly_fields = (
         "salario_anual",
         "tiempo_real_trabajado_en_dias",
+        "pago",
     )
     list_display = (
         "fecha",

@@ -79,6 +79,7 @@ def create_fake_trabajadores(num_trabajadores=20):
         ultimos_30_meses = get_first_day_of_last_months(
             30
         )  # get_first_day_of_last_30_months()
+        lista_salarios = []
         for i, trabajador in enumerate(trabajadores):
             if i > limite:
                 break
@@ -105,33 +106,14 @@ def create_fake_trabajadores(num_trabajadores=20):
                 salario.fecha = fecha
                 salario.trabajador = trabajador
                 salario.save()
+                lista_salarios.append(salario)
 
-        # print(f"cantidad de trabajadores: {len(trabajadores)}")
         dinero_a_repartir = 15000 * len(trabajadores)
         planificacion_utilidades = PlanificacionUtilidadesAnuales()
         planificacion_utilidades.dinero_a_repartir = dinero_a_repartir
         planificacion_utilidades.fecha = timezone.now()
         planificacion_utilidades.year = planificacion_utilidades.fecha.year - 1
         planificacion_utilidades.save()
-        # dinero_que_queda = dinero_a_repartir
-        # fecha_pago_utlidades = timezone.now().date()
-        # lista_utilidades = []
-        # for i, trabajador in enumerate(trabajadores):
-        #     if i > limite:
-        #         break
-        #     utilidad = PagoPorUtilidadesAnuales()
-        #     utilidad.fecha = fecha_pago_utlidades
-        #     utilidad.trabajador = trabajador
-        #     utilidad.dinero_a_repartir = dinero_a_repartir
-        #     utilidad.calcular_pago()
-        #     utilidad.save()
-        #     dinero_que_queda -= utilidad.pago
-        #     lista_utilidades.append(utilidad)
-        # if dinero_que_queda > 0:
-        #     pago_extra = dinero_que_queda / len(trabajadores)
-        #     for i, utilidad in enumerate(lista_utilidades):
-        #         utilidad.dinero_a_repartir = pago_extra
-        #         utilidad.save()
 
         for i, trabajador in enumerate(trabajadores):
             if i < 5:
@@ -180,3 +162,6 @@ def create_fake_trabajadores(num_trabajadores=20):
                         weeks=random.randint(5, 8)
                     )
                     certificado2.save()
+
+        for salario in lista_salarios:
+            salario.save()

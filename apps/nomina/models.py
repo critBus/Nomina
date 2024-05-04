@@ -3,7 +3,7 @@ from datetime import timedelta
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator
 from django.db import models
-from django.db.models import Sum
+from django.db.models import Sum, Q
 from django.utils import timezone
 
 # from apps.nomina.utils.util import es_dia_feriado, get_dias_feriado
@@ -427,6 +427,7 @@ class PrimerCertificadoMedico(models.Model):
         max_digits=15,
         verbose_name="Prestación Económica",
         validators=[MinValueValidator(0)],
+        default=0,
     )
 
     certificado_medico_general = models.OneToOneField(
@@ -440,6 +441,14 @@ class PrimerCertificadoMedico(models.Model):
     horas_laborales_en_dias_de_carencia = models.IntegerField(
         verbose_name="Carencia",
         default=0,
+    )
+
+    pago_mensual = models.ForeignKey(
+        "nomina.SalarioMensualTotalPagado",
+        on_delete=models.SET_NULL,
+        verbose_name="Pago Mensual",
+        null=True,
+        blank=True,
     )
 
     def clean(self):
@@ -514,6 +523,7 @@ class ExtraCertificadoMedico(models.Model):
         max_digits=15,
         verbose_name="Prestación Económica",
         validators=[MinValueValidator(0)],
+        default=0,
     )
 
     certificado_medico_general = models.ForeignKey(
@@ -527,6 +537,13 @@ class ExtraCertificadoMedico(models.Model):
     horas_laborales_en_dias_de_carencia = models.IntegerField(
         verbose_name="Carencia",
         default=0,
+    )
+    pago_mensual = models.ForeignKey(
+        "nomina.SalarioMensualTotalPagado",
+        on_delete=models.SET_NULL,
+        verbose_name="Pago Mensual",
+        null=True,
+        blank=True,
     )
 
     def clean(self):
@@ -606,12 +623,6 @@ class LicenciaMaternidad(models.Model):
 
 class LicenciaPrenatal(models.Model):
     class Meta:
-        # unique_together = (
-        #     (
-        #         "trabajador",
-        #         "fecha_inicio",
-        #     ),
-        # )
         verbose_name = "Licencia Prenatal"
         verbose_name_plural = "Licencias Prenatales"
 
@@ -635,6 +646,7 @@ class LicenciaPrenatal(models.Model):
         max_digits=15,
         verbose_name="Prestación Económica",
         validators=[MinValueValidator(0)],
+        default=0,
     )
     importe_semanal = models.DecimalField(
         decimal_places=2,
@@ -647,6 +659,13 @@ class LicenciaPrenatal(models.Model):
         max_digits=15,
         verbose_name="Salario Anual",
         validators=[MinValueValidator(0)],
+    )
+    pago_mensual = models.ForeignKey(
+        "nomina.SalarioMensualTotalPagado",
+        on_delete=models.SET_NULL,
+        verbose_name="Pago Mensual",
+        null=True,
+        blank=True,
     )
 
     def clean(self):
@@ -704,21 +723,23 @@ class PrimeraLicenciaPosnatal(models.Model):
         verbose_name="Fecha fin", validators=[date_not_old_validation]
     )
 
-    # licencia_prenatal = models.OneToOneField(
-    #     LicenciaPrenatal,
-    #     on_delete=models.CASCADE,
-    #     verbose_name="Licencia Prenatal",
-    #
-    # )
     prestacion_economica = models.DecimalField(
         decimal_places=2,
         max_digits=15,
         verbose_name="Prestación Económica",
         validators=[MinValueValidator(0)],
+        default=0,
     )
     licencia_maternidad = models.OneToOneField(
         LicenciaMaternidad,
         on_delete=models.CASCADE,
+    )
+    pago_mensual = models.ForeignKey(
+        "nomina.SalarioMensualTotalPagado",
+        on_delete=models.SET_NULL,
+        verbose_name="Pago Mensual",
+        null=True,
+        blank=True,
     )
 
     def clean(self):
@@ -820,10 +841,18 @@ class SegundaLicenciaPosnatal(models.Model):
         max_digits=15,
         verbose_name="Prestación Económica",
         validators=[MinValueValidator(0)],
+        default=0,
     )
     licencia_maternidad = models.OneToOneField(
         LicenciaMaternidad,
         on_delete=models.CASCADE,
+    )
+    pago_mensual = models.ForeignKey(
+        "nomina.SalarioMensualTotalPagado",
+        on_delete=models.SET_NULL,
+        verbose_name="Pago Mensual",
+        null=True,
+        blank=True,
     )
 
     def clean(self):
@@ -894,10 +923,18 @@ class PrestacionSocial(models.Model):
         max_digits=15,
         verbose_name="Prestación Económica",
         validators=[MinValueValidator(0)],
+        default=0,
     )
     licencia_maternidad = models.OneToOneField(
         LicenciaMaternidad,
         on_delete=models.CASCADE,
+    )
+    pago_mensual = models.ForeignKey(
+        "nomina.SalarioMensualTotalPagado",
+        on_delete=models.SET_NULL,
+        verbose_name="Pago Mensual",
+        null=True,
+        blank=True,
     )
 
     def clean(self):
@@ -1032,6 +1069,8 @@ class PagoPorUtilidadesAnuales(models.Model):
         max_digits=15,
         verbose_name="Pago Por Utilidades",
         validators=[MinValueValidator(0)],
+        blank=True,
+        null=True,
     )
     pago_extra = models.DecimalField(
         decimal_places=2,
@@ -1039,6 +1078,8 @@ class PagoPorUtilidadesAnuales(models.Model):
         verbose_name="Extra",
         default=0,
         validators=[MinValueValidator(0)],
+        blank=True,
+        null=True,
     )
     trabajador = models.ForeignKey(
         Trabajador, on_delete=models.CASCADE, verbose_name="Trabajador"
@@ -1062,6 +1103,13 @@ class PagoPorUtilidadesAnuales(models.Model):
     )
     tiempo_real_trabajado_en_dias = models.IntegerField(
         verbose_name="Tiempo Real Trabajado en días ", default=0
+    )
+    pago_mensual = models.ForeignKey(
+        "nomina.SalarioMensualTotalPagado",
+        on_delete=models.SET_NULL,
+        verbose_name="Pago Mensual",
+        null=True,
+        blank=True,
     )
 
     def calcular_TRT(self, inicio, fin):
@@ -1144,52 +1192,80 @@ class SalarioMensualTotalPagado(models.Model):
     ]
     fecha = models.DateField(verbose_name="Fecha", default=timezone.now)
     trabajador = models.ForeignKey(
-        Trabajador, on_delete=models.CASCADE, verbose_name="Trabajador"
+        Trabajador,
+        on_delete=models.CASCADE,
+        verbose_name="Trabajador",
+        blank=True,
+        null=True,
     )
     salario_devengado_mensual = models.DecimalField(
         decimal_places=2,
         max_digits=15,
         verbose_name="Salario Devengado Mensual",
         validators=[MinValueValidator(0)],
+        default=0,
     )
     salario_basico_mensual = models.DecimalField(
         decimal_places=2,
         max_digits=15,
         verbose_name="Salario Basico Mensual",
         validators=[MinValueValidator(0)],
+        default=0,
     )
     evaluacion_obtenida_por_el_jefe = models.CharField(
-        verbose_name="Evaluación",
-        max_length=256,
-        choices=EVALUACIONES,
+        verbose_name="Evaluación", max_length=256, choices=EVALUACIONES, default=0
     )
-    pago_por_utilidades_anuales = models.ForeignKey(
-        PagoPorUtilidadesAnuales,
-        on_delete=models.SET_NULL,
-        verbose_name="Pago Por Utilidades",
-        null=True,
-        blank=True,
-    )
-
-    pago_por_subsidios = models.ForeignKey(
-        PagoPorSubsidios,
-        on_delete=models.SET_NULL,
-        verbose_name="Pago Por Subsidios",
-        null=True,
-        blank=True,
+    pago_total = models.DecimalField(
+        decimal_places=2,
+        max_digits=15,
+        verbose_name="Pago Total",
+        validators=[MinValueValidator(0)],
+        default=0,
     )
 
     evaluacion_obtenida_por_el_jefe_en_puntos = models.IntegerField(
-        verbose_name="Puntos", validators=[MinValueValidator(0)]
+        verbose_name="Puntos", validators=[MinValueValidator(0)], default=0
     )
     horas_trabajadas = models.IntegerField(
-        verbose_name="Horas Trabajadas", validators=[MinValueValidator(0)]
+        verbose_name="Horas Trabajadas", validators=[MinValueValidator(0)], default=0
     )
     pago_por_dias_feriados = models.DecimalField(
+        verbose_name="Pago Dias Feriados",
         decimal_places=2,
         max_digits=15,
-        verbose_name="Pago Dias Feriados",
         validators=[MinValueValidator(0)],
+        default=0,
+    )
+    valorar_certificados_medicos = models.BooleanField(
+        verbose_name="Valorar Certificados Médicos", default=True
+    )
+    valorar_certificados_maternidad = models.BooleanField(
+        verbose_name="Valorar Certificados Maternidad", default=True
+    )
+    valorar_utilidades = models.BooleanField(
+        verbose_name="Valorar Utilidades", default=True
+    )
+
+    pago_certificados_medicos = models.DecimalField(
+        verbose_name="Pago Certificados Médicos",
+        decimal_places=2,
+        max_digits=15,
+        validators=[MinValueValidator(0)],
+        default=0,
+    )
+    pago_certificados_maternidad = models.DecimalField(
+        verbose_name="Pago Certificados Maternidad",
+        decimal_places=2,
+        max_digits=15,
+        validators=[MinValueValidator(0)],
+        default=0,
+    )
+    pago_utilidades = models.DecimalField(
+        verbose_name="Pago Utilidades",
+        decimal_places=2,
+        max_digits=15,
+        validators=[MinValueValidator(0)],
+        default=0,
     )
 
     def get_evalucacion_str(self):
@@ -1199,24 +1275,15 @@ class SalarioMensualTotalPagado(models.Model):
         return ""
 
     def calcular_cantidad_de_horas_trabajadas_este_mes(self):
-        # return calcular_cantidad_de_horas_trabajadas_por_mes(self.fecha)
         asistencias = Asistencia.objects.filter(
             trabajador=self.trabajador,
             fecha__year=self.fecha.year,
             fecha__month=self.fecha.month,
-        )  # .distinct()
-        # print(len(asistencias))
-        # lista=[v.fecha.day for v in asistencias]
-        # lista.sort()
-        # print(lista)
-        # print({v.fecha.month for v in asistencias})
-        # lista = [v.id for v in asistencias]
-        # lista.sort()
-        # print(lista)
+        )
+
         suma = 0
         for asistencia in asistencias:
             suma += asistencia.horas_trabajadas
-        # print(suma)
 
         return suma
 
@@ -1275,25 +1342,363 @@ class SalarioMensualTotalPagado(models.Model):
         self.salario_devengado_mensual = salario_basico_seleccionado
         # self.salario_devengado_mensual*= self.evaluacion_obtenida_por_el_jefe_en_puntos / 100
         self.salario_devengado_mensual /= 190.6
-        a_float = float(self.salario_devengado_mensual)
-        resultado = a_float * float(self.horas_trabajadas)
-        self.salario_devengado_mensual = resultado
-        # if self.pago_por_utilidades_anuales.pago_por_utilidades:
-        #     self.salario_devengado_mensual -= self.pago_por_utilidades.pago
-        if self.pago_por_subsidios:
-            self.salario_devengado_mensual -= self.pago_por_subsidios.pago
+        self.salario_devengado_mensual = float(self.salario_devengado_mensual) * float(
+            self.horas_trabajadas
+        )
 
-        # a_float=float(self.salario_devengado_mensual)
         self.pago_por_dias_feriados = (
             self.calcular_pago_cantidad_de_horas_trabajadas_este_mes_feriados()
         )
-        resultado = float(self.pago_por_dias_feriados)
-        self.salario_devengado_mensual += resultado
+        self.salario_devengado_mensual += float(self.pago_por_dias_feriados)
 
         if self.salario_devengado_mensual > 20000:
             print(f"exedio")
 
+        self.pago_total = self.salario_devengado_mensual
+        suma = 0
+
+        prestacion_economica = (
+            self.buscar_prestacion_economica_PrimerCertificadoMedico()
+        )
+        suma += prestacion_economica
+        self.pago_certificados_medicos = prestacion_economica
+        if self.valorar_certificados_medicos:
+            self.salario_devengado_mensual = float(
+                self.salario_devengado_mensual
+            ) - float(prestacion_economica)
+        prestacion_economica = self.buscar_prestacion_economica_ExtraCertificadoMedico()
+        self.pago_certificados_medicos = float(self.pago_certificados_medicos) + float(
+            prestacion_economica
+        )
+        suma += prestacion_economica
+        if self.valorar_certificados_medicos:
+            self.salario_devengado_mensual = float(
+                self.salario_devengado_mensual
+            ) - float(prestacion_economica)
+        prestacion_economica = self.buscar_prestacion_economica_LicenciaPrenatal()
+        self.pago_certificados_maternidad = prestacion_economica
+        suma += prestacion_economica
+        if self.valorar_certificados_maternidad:
+            self.salario_devengado_mensual = float(
+                self.salario_devengado_mensual
+            ) - float(prestacion_economica)
+        prestacion_economica = (
+            self.buscar_prestacion_economica_PrimeraLicenciaPosnatal()
+        )
+        self.pago_certificados_maternidad = float(
+            self.pago_certificados_maternidad
+        ) + float(prestacion_economica)
+        suma += prestacion_economica
+        if self.valorar_certificados_maternidad:
+            self.salario_devengado_mensual = float(
+                self.salario_devengado_mensual
+            ) - float(prestacion_economica)
+        prestacion_economica = (
+            self.buscar_prestacion_economica_SegundaLicenciaPosnatal()
+        )
+        self.pago_certificados_maternidad = float(
+            self.pago_certificados_maternidad
+        ) + float(prestacion_economica)
+        suma += prestacion_economica
+        if self.valorar_certificados_maternidad:
+            self.salario_devengado_mensual = float(
+                self.salario_devengado_mensual
+            ) - float(prestacion_economica)
+        prestacion_economica = self.buscar_prestacion_economica_PrestacionSocial()
+        suma += prestacion_economica
+        self.pago_certificados_maternidad = float(
+            self.pago_certificados_maternidad
+        ) + float(prestacion_economica)
+        if self.valorar_certificados_maternidad:
+            self.salario_devengado_mensual = float(
+                self.salario_devengado_mensual
+            ) - float(prestacion_economica)
+        prestacion_economica = (
+            self.buscar_prestacion_economica_PagoPorUtilidadesAnuales()
+        )
+        suma += prestacion_economica
+        self.pago_utilidades = prestacion_economica
+        if self.valorar_utilidades:
+            self.salario_devengado_mensual = float(
+                self.salario_devengado_mensual
+            ) - float(prestacion_economica)
+
+        # suma += self.buscar_prestacion_economica(LicenciaPrenatal)
+        # suma += self.buscar_prestacion_economica(PrimeraLicenciaPosnatal)
+        # suma += self.buscar_prestacion_economica(SegundaLicenciaPosnatal)
+        if self.salario_devengado_mensual <= 0:
+            self.salario_devengado_mensual = 0
+
+        self.pago_total = float(self.pago_total) + float(suma)
+
+    def buscar_prestacion_economica_PrimerCertificadoMedico(self):
+        es_nuevo = self.pk is None
+
+        suma = 0
+        if not es_nuevo:
+            PrimerCertificadoMedico.objects.filter(
+                pago_mensual=self,
+            ).exclude(
+                Q(
+                    fecha_inicio__month=self.fecha.month,
+                    fecha_inicio__year=self.fecha.year,
+                    certificado_medico_general__trabajador=self.trabajador,
+                )
+                # | Q(
+                #     fecha_fin__month=self.fecha.month,
+                #     fecha_fin__year=self.fecha.year,
+                #     certificado_medico_general__trabajador=self.trabajador,
+                # )
+            ).update(pago_mensual=None)
+
+            q = PrimerCertificadoMedico.objects.filter(
+                Q(pago_mensual=self)
+                | Q(
+                    fecha_inicio__month=self.fecha.month,
+                    fecha_inicio__year=self.fecha.year,
+                    pago_mensual__isnull=True,
+                    certificado_medico_general__trabajador=self.trabajador,
+                )
+                # | Q(
+                #     fecha_fin__month=self.fecha.month,
+                #     fecha_fin__year=self.fecha.year,
+                #     pago_mensual__isnull=True,
+                #     certificado_medico_general__trabajador=self.trabajador,
+                # )
+            )
+
+            # certificados=PrimerCertificadoMedico.objects.filter(pago_mensual=self)
+            # print(f" {len(certificados)} m {self.fecha.month} y {self.fecha.year}")
+            # for c in certificados:
+            #     print(f" {c.fecha_inicio.month} {c.fecha_inicio.year}")
+            #
+            # certificados = PrimerCertificadoMedico.objects.filter(certificado_medico_general__trabajador=self.trabajador)
+            # print(f" {len(certificados)} m {self.fecha.month} y {self.fecha.year}")
+            # for c in certificados:
+            #     print(f" {c.fecha_inicio.month} {c.fecha_inicio.year} {c.pago_mensual}")
+            # print(f"existe {q.exists()}")
+
+        else:
+            q = PrimerCertificadoMedico.objects.filter(
+                Q(
+                    fecha_inicio__month=self.fecha.month,
+                    fecha_inicio__year=self.fecha.year,
+                    pago_mensual__isnull=True,
+                    certificado_medico_general__trabajador=self.trabajador,
+                )
+                # | Q(
+                #     fecha_fin__month=self.fecha.month,
+                #     fecha_fin__year=self.fecha.year,
+                #     pago_mensual__isnull=True,
+                #     certificado_medico_general__trabajador=self.trabajador,
+                # )
+            )
+        q.update(pago_mensual=self)
+        suma = q.aggregate(total=Sum("prestacion_economica"))["total"]
+        # print(f"suma: {suma}")
+        return suma if suma else 0
+
+    def buscar_prestacion_economica_ExtraCertificadoMedico(self):
+        es_nuevo = self.pk is None
+
+        suma = 0
+        if not es_nuevo:
+            ExtraCertificadoMedico.objects.filter(
+                pago_mensual=self,
+            ).exclude(
+                Q(
+                    fecha_inicio__month=self.fecha.month,
+                    fecha_inicio__year=self.fecha.year,
+                    certificado_medico_general__trabajador=self.trabajador,
+                )
+                | Q(
+                    fecha_fin__month=self.fecha.month,
+                    fecha_fin__year=self.fecha.year,
+                    certificado_medico_general__trabajador=self.trabajador,
+                )
+            ).update(pago_mensual=None)
+
+            q = ExtraCertificadoMedico.objects.filter(
+                Q(pago_mensual=self)
+                | Q(
+                    fecha_inicio__month=self.fecha.month,
+                    fecha_inicio__year=self.fecha.year,
+                    pago_mensual__isnull=True,
+                    certificado_medico_general__trabajador=self.trabajador,
+                )
+                | Q(
+                    fecha_fin__month=self.fecha.month,
+                    fecha_fin__year=self.fecha.year,
+                    pago_mensual__isnull=True,
+                    certificado_medico_general__trabajador=self.trabajador,
+                )
+            )
+
+        else:
+            q = ExtraCertificadoMedico.objects.filter(
+                Q(
+                    fecha_inicio__month=self.fecha.month,
+                    fecha_inicio__year=self.fecha.year,
+                    pago_mensual__isnull=True,
+                    certificado_medico_general__trabajador=self.trabajador,
+                )
+                | Q(
+                    fecha_fin__month=self.fecha.month,
+                    fecha_fin__year=self.fecha.year,
+                    pago_mensual__isnull=True,
+                    certificado_medico_general__trabajador=self.trabajador,
+                )
+            )
+        q.update(pago_mensual=self)
+        suma = q.aggregate(total=Sum("prestacion_economica"))["total"]
+        # print(f"suma: {suma}")
+        return suma if suma else 0
+
+    def buscar_prestacion_economica_maternidad(self, clase_modelo):
+        es_nuevo = self.pk is None
+
+        suma = 0
+        if not es_nuevo:
+            clase_modelo.objects.filter(
+                pago_mensual=self,
+            ).exclude(
+                Q(
+                    fecha_inicio__month=self.fecha.month,
+                    fecha_inicio__year=self.fecha.year,
+                    licencia_maternidad__trabajador=self.trabajador,
+                )
+                # | Q(
+                #     fecha_fin__month=self.fecha.month,
+                #     fecha_fin__year=self.fecha.year,
+                #     licencia_maternidad__trabajador=self.trabajador,
+                # )
+            ).update(pago_mensual=None)
+
+            q = clase_modelo.objects.filter(
+                Q(pago_mensual=self)
+                | Q(
+                    fecha_inicio__month=self.fecha.month,
+                    fecha_inicio__year=self.fecha.year,
+                    pago_mensual__isnull=True,
+                    licencia_maternidad__trabajador=self.trabajador,
+                )
+                # | Q(
+                #     fecha_fin__month=self.fecha.month,
+                #     fecha_fin__year=self.fecha.year,
+                #     pago_mensual__isnull=True,
+                #     licencia_maternidad__trabajador=self.trabajador,
+                # )
+            )
+
+        else:
+            q = clase_modelo.objects.filter(
+                Q(
+                    fecha_inicio__month=self.fecha.month,
+                    fecha_inicio__year=self.fecha.year,
+                    pago_mensual__isnull=True,
+                    licencia_maternidad__trabajador=self.trabajador,
+                )
+                # | Q(
+                #     fecha_fin__month=self.fecha.month,
+                #     fecha_fin__year=self.fecha.year,
+                #     pago_mensual__isnull=True,
+                #     licencia_maternidad__trabajador=self.trabajador,
+                # )
+            )
+        q.update(pago_mensual=self)
+        suma = q.aggregate(total=Sum("prestacion_economica"))["total"]
+        # print(f"suma: {suma}")
+        return suma if suma else 0
+
+    def buscar_prestacion_economica_LicenciaPrenatal(
+        self,
+    ):  # licencia_maternidad__trabajador
+        return self.buscar_prestacion_economica_maternidad(LicenciaPrenatal)
+
+    def buscar_prestacion_economica_PrimeraLicenciaPosnatal(self):
+        return self.buscar_prestacion_economica_maternidad(PrimeraLicenciaPosnatal)
+
+    def buscar_prestacion_economica_SegundaLicenciaPosnatal(self):
+        return self.buscar_prestacion_economica_maternidad(SegundaLicenciaPosnatal)
+
+    def buscar_prestacion_economica_PrestacionSocial(self):
+        return self.buscar_prestacion_economica_maternidad(PrestacionSocial)
+
+    def buscar_prestacion_economica_PagoPorUtilidadesAnuales(self):
+        es_nuevo = self.pk is None
+
+        suma = 0
+        if not es_nuevo:
+            PagoPorUtilidadesAnuales.objects.filter(
+                pago_mensual=self,
+            ).exclude(
+                fecha__month=self.fecha.month,
+                fecha__year=self.fecha.year,
+                trabajador=self.trabajador,
+            ).update(pago_mensual=None)
+
+            q = PagoPorUtilidadesAnuales.objects.filter(
+                Q(pago_mensual=self)
+                | Q(
+                    fecha__month=self.fecha.month,
+                    fecha__year=self.fecha.year,
+                    trabajador=self.trabajador,
+                )
+            )
+
+        else:
+            q = PagoPorUtilidadesAnuales.objects.filter(
+                fecha__month=self.fecha.month,
+                fecha__year=self.fecha.year,
+                trabajador=self.trabajador,
+            )
+        q.update(pago_mensual=self)
+        suma = q.aggregate(total=Sum("pago") + Sum("pago_extra"))["total"]
+        # print(f"suma: {suma}")
+        return suma if suma else 0
+
+    #
+    # def buscar_prestacion_economica(self,clase_modelo):
+    #     es_nuevo = self.pk is None
+    #
+    #     suma = 0
+    #     if not es_nuevo:
+    #         clase_modelo.objects.filter(pago_mensual=self,
+    #                                                fecha_inicio__month__gt=self.fecha.month,
+    #                                                fecha_inicio__month__lt=self.fecha.month,
+    #                                                ).exclude(
+    #             fecha_fin__month=self.fecha.month
+    #         ).update(
+    #             pago_mensual=None
+    #         )
+    #         clase_modelo.objects.filter(pago_mensual=self,
+    #                                                fecha_fin__month__gt=self.fecha.month,
+    #                                                fecha_fin__month__lt=self.fecha.month,
+    #                                                ).exclude(
+    #             fecha_inicio__month=self.fecha.month
+    #         ).update(
+    #             pago_mensual=None
+    #         )
+    #         q = clase_modelo.objects.filter(
+    #             Q(pago_mensual=self)
+    #             | Q(fecha_inicio__month=self.fecha.month, pago_mensual__isnull=True)
+    #             | Q(fecha_fin__month=self.fecha.month, pago_mensual__isnull=True)
+    #         )
+    #
+    #     else:
+    #         q = clase_modelo.objects.filter(
+    #             Q(fecha_inicio__month=self.fecha.month, pago_mensual__isnull=True)
+    #             | Q(fecha_fin__month=self.fecha.month, pago_mensual__isnull=True)
+    #         )
+    #     q.update(
+    #         pago_mensual=self
+    #     )
+    #     suma = q.aggregate(total=Sum("prestacion_economica"))["total"]
+    #     # print(f"suma: {suma}")
+    #     return suma if suma else 0
+
     def save(self, *args, **kwargs):
+        response = super().save(*args, **kwargs)
         self.actualizar_pago()
         return super().save(*args, **kwargs)
 
