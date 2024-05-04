@@ -997,7 +997,8 @@ class PlanificacionUtilidadesAnuales(models.Model):
                 and utilidad.salario_anual > 0
             ):
                 utilidad.save()
-                if dinero_que_queda - utilidad.pago < 0:
+                if (dinero_que_queda - utilidad.pago) < 0:
+                    print("dinero insuficiente")
                     break
                 dinero_que_queda -= utilidad.pago
 
@@ -1017,7 +1018,7 @@ class PlanificacionUtilidadesAnuales(models.Model):
         es_nuevo = self.pk is None
         response = super().save(*args, **kwargs)
         self.crear_utlidades_para_los_trabajadores(es_nuevo)
-        return response
+        return super().save(*args, **kwargs)
 
 
 class PagoPorUtilidadesAnuales(models.Model):
