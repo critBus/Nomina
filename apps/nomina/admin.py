@@ -465,7 +465,41 @@ class PagoPorUtilidadesAnualesAdmin(admin.ModelAdmin):
     )
     date_hierarchy = "fecha"
 
-    def save_model(self, request, obj, form, change):
-        obj.calcular_pago()
-        response = super().save_model(request, obj, form, change)
-        return response
+    # def save_model(self, request, obj, form, change):
+    #     obj.calcular_pago()
+    #     response = super().save_model(request, obj, form, change)
+    #     return response
+
+
+@admin.register(PlanificacionUtilidadesAnuales)
+class PlanificacionUtilidadesAnualesAdmin(admin.ModelAdmin):
+    readonly_fields = (
+        "sobrante",
+        "sobrante_por_trabajador",
+    )
+    list_display = (
+        "fecha",
+        "year",
+        "dinero_a_repartir",
+        "sobrante",
+        "sobrante_por_trabajador",
+    )
+    search_fields = (
+        "fecha",
+        "year",
+        "dinero_a_repartir",
+        "sobrante",
+        "sobrante_por_trabajador",
+    )
+    list_filter = (
+        "fecha",
+        "year",
+    )
+    ordering = (
+        "fecha",
+        "year",
+        "dinero_a_repartir",
+        "sobrante",
+        "sobrante_por_trabajador",
+    )
+    date_hierarchy = "fecha"

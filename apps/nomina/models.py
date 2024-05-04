@@ -940,6 +940,86 @@ def crear_PrestacionSocial(segunda: SegundaLicenciaPosnatal, prestacion=None):
     prestacion.save()
 
 
+class PlanificacionUtilidadesAnuales(models.Model):
+    class Meta:
+        verbose_name = "Pago Utilidad Anual"
+        verbose_name_plural = "Pago Utilidades Anuales"
+
+    fecha = models.DateField(verbose_name="Fecha", default=timezone.now)
+    year = models.IntegerField(
+        verbose_name="Año",
+        default=0,
+        validators=[MinValueValidator(2010), MaxValueValidator(2030)],
+    )
+    dinero_a_repartir = models.DecimalField(
+        decimal_places=2,
+        max_digits=15,
+        verbose_name="Dinero a Repartir",
+        default=0,
+        validators=[MinValueValidator(0)],
+    )
+    sobrante = models.DecimalField(
+        decimal_places=2,
+        max_digits=15,
+        verbose_name="Sobrante",
+        default=0,
+    )
+    sobrante_por_trabajador = models.DecimalField(
+        decimal_places=2,
+        max_digits=15,
+        verbose_name="Sobrante Por Trabajador",
+        default=0,
+        validators=[MinValueValidator(0)],
+    )
+
+    def crear_utlidades_para_los_trabajadores(self, es_nuevo):
+        dinero_a_repartir = self.dinero_a_repartir
+        dinero_que_queda = dinero_a_repartir
+        fecha_pago_utlidades = self.fecha
+        lista_utilidades = []
+        trabajadores = Trabajador.objects.all()
+        for i, trabajador in enumerate(trabajadores):
+            if es_nuevo:
+                utilidad = PagoPorUtilidadesAnuales()
+            else:
+                utilidad = PagoPorUtilidadesAnuales.objects.filter(
+                    planificacion=self, trabajador=trabajador
+                ).first()
+                if not utilidad:
+                    utilidad = PagoPorUtilidadesAnuales()
+            utilidad.fecha = fecha_pago_utlidades
+            utilidad.trabajador = trabajador
+            utilidad.dinero_a_repartir = dinero_a_repartir
+            utilidad.planificacion = self
+            utilidad.calcular_pago()
+            if (
+                utilidad.tiempo_real_trabajado_en_dias > 0
+                and utilidad.salario_anual > 0
+            ):
+                utilidad.save()
+                if dinero_que_queda - utilidad.pago < 0:
+                    break
+                dinero_que_queda -= utilidad.pago
+
+                lista_utilidades.append(utilidad)
+        self.sobrante = dinero_que_queda
+        if dinero_que_queda > 0:
+            pago_extra = dinero_que_queda / len(lista_utilidades)
+            self.sobrante_por_trabajador = pago_extra
+            for i, utilidad in enumerate(lista_utilidades):
+                utilidad.pago_extra = pago_extra
+                utilidad.save()
+        PagoPorUtilidadesAnuales.objects.filter(planificacion=self).exclude(
+            id__in=[v.id for v in lista_utilidades]
+        ).delete()
+
+    def save(self, *args, **kwargs):
+        es_nuevo = self.pk is None
+        response = super().save(*args, **kwargs)
+        self.crear_utlidades_para_los_trabajadores(es_nuevo)
+        return response
+
+
 class PagoPorUtilidadesAnuales(models.Model):
     class Meta:
         verbose_name = "Utilidad Anual"
@@ -962,6 +1042,11 @@ class PagoPorUtilidadesAnuales(models.Model):
     trabajador = models.ForeignKey(
         Trabajador, on_delete=models.CASCADE, verbose_name="Trabajador"
     )
+    planificacion = models.ForeignKey(
+        PlanificacionUtilidadesAnuales,
+        on_delete=models.CASCADE,
+        verbose_name="Planificación",
+    )
     dinero_a_repartir = models.DecimalField(
         decimal_places=2,
         max_digits=15,
@@ -978,20 +1063,35 @@ class PagoPorUtilidadesAnuales(models.Model):
         verbose_name="Tiempo Real Trabajado en días ", default=0
     )
 
+    def calcular_TRT(self, inicio, fin):
+        # print(inicio)
+        # print(fin)
+        return Asistencia.objects.filter(
+            fecha__gte=inicio,
+            fecha__lte=fin,
+            horas_trabajadas__gt=0,
+            trabajador=self.trabajador,
+        ).count()
+
     def calcular_pago(self):
-        fin = self.fecha.replace(year=self.fecha.year - 1, month=12, day=31)
-        inicio = self.fecha.replace(year=self.fecha.year - 1, month=1, day=1)
+        year = self.planificacion.year
+        fin = self.fecha.replace(year=year, month=12, day=31)
+        inicio = self.fecha.replace(year=year, month=1, day=1)
         self.salario_anual = calcular_SA(fecha=fin, trabajador=self.trabajador)
         SA = self.salario_anual
-        self.tiempo_real_trabajado_en_dias = get_cantidad_dias_entre_semana(inicio, fin)
+        self.tiempo_real_trabajado_en_dias = self.calcular_TRT(
+            inicio, fin
+        )  # get_cantidad_dias_entre_semana(inicio, fin)
         TRT = self.tiempo_real_trabajado_en_dias
-        K = SA / TRT
+        # print(f"TRT {TRT}")
 
         P = SA / 12
         if P == 0 or TRT == 0:
             print(f"SA {SA} TRT {TRT}")
+            self.pago = 0
             return
         O = self.dinero_a_repartir
+        K = SA / TRT
         L = O / P
         UA = K * L
         self.pago = UA
