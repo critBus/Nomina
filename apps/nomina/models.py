@@ -274,7 +274,7 @@ class Trabajador(models.Model):
     carnet = models.CharField(
         verbose_name="Carnet",
         unique=True,
-        max_length=11,
+        max_length=50,
         validators=[
             length_validation_11,
             RegexValidator(r"^[0-9]{11}$"),
