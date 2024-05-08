@@ -3,7 +3,7 @@ from datetime import timedelta
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator
 from django.db import models
-from django.db.models import Sum, Q
+from django.db.models import Q, Sum
 from django.utils import timezone
 
 # from apps.nomina.utils.util import es_dia_feriado, get_dias_feriado

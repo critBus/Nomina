@@ -26,13 +26,14 @@ admin.site.site_title = "Nomina"
 
 urlpatterns = [
     path("", include("apps.base.urls")),
+    path("", include("apps.nomina.urls")),
     path("admin/", admin.site.urls),
     path("", include("apps.users.urls")),
     path("reportbroD/", include("django_reportbroD.urls", namespace="reportbroD")),
 ]
-anterior = settings.DEBUG
-settings.DEBUG = True
+# anterior = settings.DEBUG
+# settings.DEBUG = True
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-if not anterior:
-    settings.DEBUG = False
+# if not anterior:
+#     settings.DEBUG = False

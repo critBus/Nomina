@@ -1,11 +1,19 @@
 from django.contrib import admin
 from django.db.models import BooleanField, Case, CharField, Q, Value, When
-from django_reportbroD.reportcore import reportPDF
 
 from apps.users.models import User
 from config.utils.utils_reportes import AdministradorDeReporte
 
 from .models import *
+from .utils.utils_reportes_d import (
+    general_reporte_prestacion_social_pdf,
+    generar_reporte_certificados,
+    generar_reporte_historial_de_evaluacion_pdf,
+    generar_reporte_maternidad_pdf,
+    generar_reporte_sbm,
+    generar_reporte_sdm,
+    generar_reporte_utilidades_pdf,
+)
 
 
 class LicenciaPrenatalInline(admin.StackedInline):
@@ -104,6 +112,8 @@ class LicenciaMaternidadAdmin(admin.ModelAdmin):
         "fecha_inicio",
     )
     date_hierarchy = "fecha_inicio"
+
+    actions = [generar_reporte_maternidad_pdf, general_reporte_prestacion_social_pdf]
 
     def get_queryset(self, request):
         return (
@@ -280,21 +290,6 @@ class SalarioEscalaAdmin(admin.ModelAdmin):
     view_categoria_ocupacional.short_description = "Categoria Ocupacional"
 
 
-def generar_pdf(modeladmin, request, queryset):
-    trabajadores = queryset
-
-    data = {
-        "trabajadores": [
-            {"nombre": v.nombre, "apellidos": v.apellidos, "cargo": v.cargo.cargo}
-            for v in trabajadores
-        ],
-    }
-
-    code_report = 1
-
-    return reportPDF(request, code_report, data, file="reporte trabajadores")
-
-
 @admin.register(Trabajador)
 class TrabajadorAdmin(admin.ModelAdmin):
     list_display = (
@@ -322,7 +317,7 @@ class TrabajadorAdmin(admin.ModelAdmin):
         "email",
         "telefono",
     )
-    actions = [generar_pdf]
+    # actions = [generar_pdf]
 
 
 @admin.register(Asistencia)
@@ -441,6 +436,12 @@ class SalarioMensualTotalPagadoAdmin(admin.ModelAdmin):
         "pago_total",
     )
     date_hierarchy = "fecha"
+    actions = [
+        generar_reporte_sdm,
+        generar_reporte_sbm,
+        generar_reporte_certificados,
+        generar_reporte_historial_de_evaluacion_pdf,
+    ]
 
 
 @admin.register(PagoPorUtilidadesAnuales)
@@ -469,6 +470,7 @@ class PagoPorUtilidadesAnualesAdmin(admin.ModelAdmin):
         "trabajador",
     )
     date_hierarchy = "fecha"
+    actions = [generar_reporte_utilidades_pdf]
 
     # def save_model(self, request, obj, form, change):
     #     obj.calcular_pago()
