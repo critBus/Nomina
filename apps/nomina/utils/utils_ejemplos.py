@@ -51,14 +51,17 @@ def create_fake_trabajadores(num_trabajadores=20):
         for i in range(num_trabajadores):
             # if i>1:
             #     break
+            femenino = random.randint(1, 3) == 2
             Trabajador.objects.create(
                 carnet=fake.unique.numerify(text="############"),
-                nombre=fake.first_name(),
+                nombre=fake.first_name() if not femenino else fake.first_name_female(),
                 apellidos=fake.last_name(),
                 categoria_ocupacional=fake.random_element(
                     elements=("Categoria1", "Categoria2")
                 ),
                 email=fake.email(),
+                cargo="Jefe" if random.randint(1, 5) == 3 else "Trabajador",
+                sexo="Femenino" if femenino else "Masculino",
                 telefono=fake.unique.numerify(text="########"),
                 direccion=fake.address(),
                 area=fake.random_element(
@@ -83,7 +86,7 @@ def create_fake_trabajadores(num_trabajadores=20):
         for i, trabajador in enumerate(trabajadores):
             if i > limite:
                 break
-            for fecha in ultimos_30_meses:
+            for fecha in ultimos_30_meses[3:]:
                 # if fecha.year==2024 and fecha.month==7 and fecha.day==1:
                 #     print("el dia que se exede")
                 # if fecha.year==2024 and fecha.month==5 and fecha.day==13:

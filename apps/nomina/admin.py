@@ -115,6 +115,12 @@ class LicenciaMaternidadAdmin(admin.ModelAdmin):
 
     actions = [generar_reporte_maternidad_pdf, general_reporte_prestacion_social_pdf]
 
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "trabajador":
+            kwargs["queryset"] = Trabajador.objects.filter(sexo="Femenino")
+
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
     def get_queryset(self, request):
         return (
             super()

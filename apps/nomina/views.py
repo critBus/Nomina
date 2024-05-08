@@ -26,7 +26,7 @@ def generar_reporte_maternidad_view(request):
             "nombre": licencia.trabajador.nombre,
             "apellidos": licencia.trabajador.apellidos,
             "ci": licencia.trabajador.carnet,
-            "cargo": licencia.trabajador.salario_escala.grupo_escala,
+            "cargo": licencia.trabajador.cargo,
         }
         pre: LicenciaPrenatal = LicenciaPrenatal.objects.filter(
             licencia_maternidad=licencia
@@ -45,7 +45,7 @@ def generar_reporte_maternidad_view(request):
     data = {"lista": lista, "nombre_reporte": "Control de la Prestación de Pago"}
 
     return export_report_by_name(
-        "Control de la Prestación de Pago", data, extension="xlsx", file="reporte"
+        "Control de la Prestación de Pago", data, extension="pdf", file="reporte"
     )
 
 
@@ -64,7 +64,7 @@ def generar_reporte_sdm_view(request):
         data_entidad = {
             "nombre": entidad.trabajador.nombre,
             "apellidos": entidad.trabajador.apellidos,
-            "cargo": entidad.trabajador.salario_escala.grupo_escala,
+            "cargo": entidad.trabajador.cargo,
             "ci": entidad.trabajador.carnet,
             "year_mes": f"{entidad.fecha.year}-{entidad.fecha.month}",
             "year": entidad.fecha.year,
@@ -76,6 +76,7 @@ def generar_reporte_sdm_view(request):
     data = {
         "lista": lista,
         "nombre_reporte": "Salario Devengado",
+        "fecha_imprecion": timezone.now(),
     }
     return export_report_by_name(
         "Salario Devengado", data, extension="pdf", file="reporte"
@@ -97,7 +98,7 @@ def generar_reporte_sbm_view(request):
         data_entidad = {
             "nombre": entidad.trabajador.nombre,
             "apellidos": entidad.trabajador.apellidos,
-            "cargo": entidad.trabajador.salario_escala.grupo_escala,
+            "cargo": entidad.trabajador.cargo,
             "ci": entidad.trabajador.carnet,
             "year": entidad.fecha.year,
             "year_mes": f"{entidad.fecha.year}-{entidad.fecha.month}",
@@ -106,7 +107,11 @@ def generar_reporte_sbm_view(request):
         }
         lista.append(data_entidad)
 
-    data = {"lista": lista, "nombre_reporte": "Pre-nomina"}
+    data = {
+        "lista": lista,
+        "nombre_reporte": "Pre-nomina",
+        "fecha_imprecion": timezone.now(),
+    }
     return export_report_by_name("Pre-nomina", data, extension="pdf", file="reporte")
 
 
@@ -124,7 +129,7 @@ def generar_reporte_certificados_view(request):
         data_entidad = {
             "nombre": entidad.trabajador.nombre,
             "apellidos": entidad.trabajador.apellidos,
-            "cargo": entidad.trabajador.salario_escala.grupo_escala,
+            "cargo": entidad.trabajador.cargo,
             "ci": entidad.trabajador.carnet,
             "year": entidad.fecha.year,
             "year_mes": f"{entidad.fecha.year}-{entidad.fecha.month}",
@@ -133,7 +138,11 @@ def generar_reporte_certificados_view(request):
         }
         lista.append(data_entidad)
 
-    data = {"lista": lista, "nombre_reporte": "Salario por Certificado"}
+    data = {
+        "lista": lista,
+        "nombre_reporte": "Salario por Certificado",
+        "fecha_imprecion": timezone.now(),
+    }
     return export_report_by_name(
         "Salario por Certificado", data, extension="pdf", file="reporte"
     )
@@ -154,7 +163,7 @@ def general_reporte_prestacion_social_view(request):
         data_entidad = {
             "nombre": entidad.licencia_maternidad.trabajador.nombre,
             "apellidos": entidad.licencia_maternidad.trabajador.apellidos,
-            "cargo": entidad.licencia_maternidad.trabajador.salario_escala.grupo_escala,
+            "cargo": entidad.licencia_maternidad.trabajador.cargo,
             "ci": entidad.licencia_maternidad.trabajador.carnet,
             "inicio": entidad.fecha_inicio,
             "fin": entidad.fecha_fin,
@@ -162,7 +171,11 @@ def general_reporte_prestacion_social_view(request):
         }
         lista.append(data_entidad)
 
-    data = {"lista": lista, "nombre_reporte": "Salario de licencia por Maternidad"}
+    data = {
+        "lista": lista,
+        "nombre_reporte": "Salario de licencia por Maternidad",
+        "fecha_imprecion": timezone.now(),
+    }
     return export_report_by_name(
         "Salario de licencia por Maternidad", data, extension="pdf", file="reporte"
     )
@@ -181,7 +194,7 @@ def generar_reporte_utilidades_view(request):
         data_entidad = {
             "nombre": entidad.trabajador.nombre,
             "apellidos": entidad.trabajador.apellidos,
-            "cargo": entidad.trabajador.salario_escala.grupo_escala,
+            "cargo": entidad.trabajador.cargo,
             "ci": entidad.trabajador.carnet,
             "year": entidad.fecha.year,
             "year_mes": f"{entidad.fecha.year}-{entidad.fecha.month}",
@@ -190,7 +203,11 @@ def generar_reporte_utilidades_view(request):
         }
         lista.append(data_entidad)
 
-    data = {"lista": lista, "nombre_reporte": "Salario de Utilidades Anuales"}
+    data = {
+        "lista": lista,
+        "nombre_reporte": "Salario de Utilidades Anuales",
+        "fecha_imprecion": timezone.now(),
+    }
     return export_report_by_name(
         "Salario de Utilidades Anuales", data, extension="pdf", file="reporte"
     )
@@ -210,7 +227,7 @@ def generar_reporte_historial_de_evaluacion_view(request):
         data_entidad = {
             "nombre": entidad.trabajador.nombre,
             "apellidos": entidad.trabajador.apellidos,
-            "cargo": entidad.trabajador.salario_escala.grupo_escala,
+            "cargo": entidad.trabajador.cargo,
             "ci": entidad.trabajador.carnet,
             "year": entidad.fecha.year,
             "mes": entidad.fecha.month,
@@ -221,7 +238,7 @@ def generar_reporte_historial_de_evaluacion_view(request):
     data = {
         "lista": lista,
         "nombre_reporte": "Historial de evaluación",
-        # "fecha_imprecion":timezone.now(),
+        "fecha_imprecion": timezone.now(),
     }
     print(len(lista))
     return export_report_by_name(

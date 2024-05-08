@@ -316,6 +316,17 @@ class Trabajador(models.Model):
             not_empty_validation,
         ],
     )
+    cargo = models.CharField(
+        verbose_name="Cargo",
+        max_length=50,
+        validators=[not_empty_validation],
+    )
+    sexo = models.CharField(
+        verbose_name="Sexo",
+        max_length=50,
+        default="Masculino",
+        choices=[("Masculino", "Masculino"), ("Femenino", "Femenino")],
+    )
     direccion = models.CharField(verbose_name="Dirección", max_length=256)
     area = models.CharField(
         verbose_name="Área",
@@ -342,8 +353,6 @@ class Trabajador(models.Model):
         null=True,
         blank=True,
     )
-    # escala = models.ForeignKey(Escala, on_delete=models.CASCADE, verbose_name="Escala")
-    # cargo = models.ForeignKey(Cargo, on_delete=models.CASCADE, verbose_name="Cargo")
 
     def __str__(self):
         return f"{self.nombre} {self.apellidos}"
@@ -616,6 +625,11 @@ class LicenciaMaternidad(models.Model):
     fecha_inicio = models.DateField(
         verbose_name="Fecha Inicio", validators=[date_not_old_validation]
     )
+
+    def clean(self):
+        super().clean()
+        if self.trabajador.sexo != "Femenino":
+            raise ValidationError("El trabajador debe de ser una mujer")
 
     def __str__(self):
         return f"{self.trabajador.nombre} {self.trabajador.apellidos}"
