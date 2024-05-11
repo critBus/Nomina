@@ -167,6 +167,24 @@ JAZZMIN_SETTINGS = {
     "login_logo_dark": "img/logo.png",
     # CSS classes that are applied to the logo above
     "site_logo_classes": "",
+    # Links to put along the top menu
+    "topmenu_links": [
+        # Url that gets reversed (Permissions can be added)
+        {
+            "name": "Plantillas Reportes",
+            "url": "/reportbroD",
+            "permissions": [
+                "reportbroD.view_reportrequest",
+                "reportbroD.delete_reportrequest",
+                "reportbroD.change_reportrequest",
+                "reportbroD.add_reportrequest",
+                "reportbroD.view_reportdefinition",
+                "reportbroD.delete_reportdefinition",
+                "reportbroD.change_reportdefinition",
+                "reportbroD.add_reportdefinition",
+            ],
+        },
+    ],
 }
 
 DJANGO_SUPERUSER_USERNAME = os.environ.get("DJANGO_SUPERUSER_USERNAME")
