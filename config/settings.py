@@ -151,7 +151,23 @@ STATIC_ROOT = os.path.join(BASE_DIR, "static/")
 
 AUTH_USER_MODEL = "users.User"
 
-JAZZMIN_SETTINGS = {"welcome_sign": "Bienvenido"}
+JAZZMIN_SETTINGS = {
+    "welcome_sign": "Bienvenido",
+    # title of the window (Will default to current_admin_site.site_title if absent or None)
+    "site_title": "Nomina",
+    # Title on the login screen (19 chars max) (defaults to current_admin_site.site_header if absent or None)
+    "site_header": "Nomina",
+    # Title on the brand (19 chars max) (defaults to current_admin_site.site_header if absent or None)
+    "site_brand": "Nomina",
+    # Logo to use for your site, must be present in static files, used for brand on top left
+    "site_logo": "img/logo.png",
+    # Logo to use for your site, must be present in static files, used for login form logo (defaults to site_logo)
+    "login_logo": "img/logo.png",
+    # Logo to use for login form in dark themes (defaults to login_logo)
+    "login_logo_dark": "img/logo.png",
+    # CSS classes that are applied to the logo above
+    "site_logo_classes": "",
+}
 
 DJANGO_SUPERUSER_USERNAME = os.environ.get("DJANGO_SUPERUSER_USERNAME")
 DJANGO_SUPERUSER_PASSWORD = os.environ.get("DJANGO_SUPERUSER_PASSWORD")
