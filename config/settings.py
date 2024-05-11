@@ -199,6 +199,21 @@ JAZZMIN_SETTINGS = {
         "nomina.SalarioMensualTotalPagado",
         "reportbroD",
     ],
+    # for the full list of 5.13.0 free icon classes
+    "icons": {
+        "auth": "fas fa-users-cog",
+        "users.User": "fas fa-user",
+        "auth.Group": "fas fa-users",
+        "auth.Permission": "fas fa-key",
+        "nomina.SalarioEscala": "fas fa-dollar-sign",
+        "nomina.Trabajador": "fas fas fa-user-tie",
+        "nomina.Asistencia": "fas fas fa-walking",
+        "nomina.PlanificacionUtilidadesAnuales": "fas fa-chalkboard-teacher",
+        "nomina.PagoPorUtilidadesAnuales": "fas  fa-hand-holding-usd",
+        "nomina.LicenciaMaternidad": "fas fa-baby-carriage",
+        "nomina.CertificadoMedicoGeneral": "fas fa-user-md",
+        "nomina.SalarioMensualTotalPagado": "fas fa-money-check-alt",
+    },
 }
 
 DJANGO_SUPERUSER_USERNAME = os.environ.get("DJANGO_SUPERUSER_USERNAME")
