@@ -185,6 +185,20 @@ JAZZMIN_SETTINGS = {
             ],
         },
     ],
+    "order_with_respect_to": [
+        "users",
+        "auth",
+        "nomina",
+        "nomina.SalarioEscala",
+        "nomina.Trabajador",
+        "nomina.Asistencia",
+        "nomina.PlanificacionUtilidadesAnuales",
+        "nomina.PagoPorUtilidadesAnuales",
+        "nomina.LicenciaMaternidad",
+        "nomina.CertificadoMedicoGeneral",
+        "nomina.SalarioMensualTotalPagado",
+        "reportbroD",
+    ],
 }
 
 DJANGO_SUPERUSER_USERNAME = os.environ.get("DJANGO_SUPERUSER_USERNAME")
