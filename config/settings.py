@@ -214,6 +214,11 @@ JAZZMIN_SETTINGS = {
         "nomina.CertificadoMedicoGeneral": "fas fa-user-md",
         "nomina.SalarioMensualTotalPagado": "fas fa-money-check-alt",
     },
+    # Icons that are used when one is not manually specified
+    "default_icon_parents": "fas fa-chevron-circle-right",
+}
+JAZZMIN_UI_TWEAKS = {
+    "theme": "default",
 }
 
 DJANGO_SUPERUSER_USERNAME = os.environ.get("DJANGO_SUPERUSER_USERNAME")
