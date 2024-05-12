@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import date, datetime, timedelta
 
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator
@@ -7,21 +7,21 @@ from django.db.models import Q, Sum
 from django.utils import timezone
 
 # from apps.nomina.utils.util import es_dia_feriado, get_dias_feriado
-from apps.nomina.utils.util_salario import (
-    dias_restantes_mes,
-    diferencia_menos_de_5_meses,
-    es_viernes,
-    get_cantidad_de_horas_entre_semana,
-    get_cantidad_dias_entre_semana,
-    get_dias_entre_semana,
-    get_dias_feriado,
-    get_first_day_of_last_months,
-    misma_semana,
-    nombre_dia_semana,
-    primer_cumpleannos,
-    siguiente_dia_laborable,
-    veces_supera_siete,
-)
+# from apps.nomina.utils.util_salario import (
+#     dias_restantes_mes,
+#     diferencia_menos_de_5_meses,
+#     es_viernes,
+#     get_cantidad_de_horas_entre_semana,
+#     get_cantidad_dias_entre_semana,
+#     get_dias_entre_semana,
+#     get_dias_feriado,
+#     get_first_day_of_last_months,
+#     misma_semana,
+#     nombre_dia_semana,
+#     primer_cumpleannos,
+#     siguiente_dia_laborable,
+#     veces_supera_siete,
+# )
 
 NOMBRE_CARGO_DIRECTOR = "Director"
 NOMBRE_ROL_ADMINISTRADOR = "Administrador"
@@ -59,6 +59,30 @@ def date_not_future_validation(fecha):
     hoy = timezone.now().date()
     if fecha > hoy:
         raise ValidationError("La fecha no puede ser en el futuro")
+
+
+class DiaFeriado(models.Model):
+    class Meta:
+        verbose_name = "Día Feriado"
+        verbose_name_plural = "Dias Feriados"
+
+    fecha = models.DateField(
+        verbose_name="Fecha",
+    )
+    nombre = models.CharField(
+        verbose_name="Nombre",
+        max_length=50,
+        null=True,
+        blank=True,
+    )
+    descripcion = models.TextField(
+        verbose_name="Descripción",
+        null=True,
+        blank=True,
+    )
+
+    def __str__(self):
+        return f"{self.fecha} {self.nombre}"
 
 
 class SalarioEscala(models.Model):
@@ -409,7 +433,11 @@ class CertificadoMedicoGeneral(models.Model):
         Trabajador, on_delete=models.CASCADE, verbose_name="Trabajador"
     )
     ingresado = models.BooleanField(verbose_name="Ingresado", default=False)
-    descripcion = models.TextField(verbose_name="Descripción")
+    descripcion = models.TextField(
+        verbose_name="Descripción",
+        null=True,
+        blank=True,
+    )
 
     salario_anual = models.DecimalField(
         decimal_places=2,
@@ -1306,15 +1334,21 @@ class SalarioMensualTotalPagado(models.Model):
         return suma
 
     def calcular_pago_cantidad_de_horas_trabajadas_este_mes_feriados(self):
+        """si no hay horas reales trabajadas va a retornar 0, no siquiera voy a calcular
+        las horas feriadas"""
         suma = 0
 
         # print(suma)
-        dias_feriados = get_dias_feriado(self.fecha.month)
+        dias_feriados = get_dias_feriado(
+            year=self.fecha.year, mes_a_buscar=self.fecha.month
+        )
         if dias_feriados:
-            SDSA = calcular_SDSA(self.fecha, self.trabajador)
             cantidad_de_horas_trabajadas_en_los_6_meses = (
                 calcular_cantidad_de_horas_trabajadas_de_los_ultimos(self.trabajador, 6)
             )
+            if cantidad_de_horas_trabajadas_en_los_6_meses == 0:
+                return 0
+            SDSA = calcular_SDSA(self.fecha, self.trabajador)
 
             TH = SDSA / cantidad_de_horas_trabajadas_en_los_6_meses
             for dia in dias_feriados:
@@ -1763,3 +1797,236 @@ def calcular_SA(fecha, trabajador):
 
 def calcular_SDSA(fecha, trabajador):
     return calcular_suma_salario(fecha, trabajador, 6)
+
+
+def es_dia_feriado(fecha: date):
+    return DiaFeriado.objects.filter(fecha=fecha).exists()
+    # for mes, dias in DIAS_FERIADOS:
+    #     if fecha.month == mes:
+    #         if fecha.day in dias:
+    #             return True
+    # return False
+
+
+def get_dias_feriado(year, mes_a_buscar):
+    return [
+        v.fecha.day
+        for v in DiaFeriado.objects.filter(fecha__year=year, fecha__month=mes_a_buscar)
+    ]
+    # for mes, dias in DIAS_FERIADOS:
+    #     if mes_a_buscar == mes:
+    #         return dias
+    # return []
+
+
+def get_days_in_month(year, month):
+    start_date = datetime(year, month, 1)
+    end_date = start_date.replace(month=start_date.month % 12 + 1, day=1) - timedelta(
+        days=1
+    )
+
+    days = [
+        (start_date + timedelta(days=i)).date()
+        for i in range((end_date - start_date).days + 1)
+    ]
+    days = list(set(days))
+    # print(f"cantida dias del mes {len(days)}")
+    # days.sort()
+    # print(f"{days[0].month if days else '-'} {days[0].year if days else '-'}  {[v.day for v in days]}")
+
+    return days
+
+
+def get_dias_laborales(year, month):
+    seleccionados = []
+    dias = get_days_in_month(year, month)
+    for dia in dias:
+        if es_dia_entresemana(dia) and not es_dia_feriado(dia):
+            seleccionados.append(dia)
+    # todos los dias entre semana menos los feriados
+    return seleccionados
+
+
+def get_dias_entre_semana(fecha1, fecha2):
+    if fecha1 == fecha2:
+        return 0
+    es_diferencia_positiva = fecha2 > fecha1
+    fecha_mayor = fecha1 if es_diferencia_positiva else fecha2
+    fecha_menor = fecha2 if es_diferencia_positiva else fecha1
+
+    dias = 0
+    while fecha_menor <= fecha_mayor:
+        if es_dia_entresemana(
+            fecha_menor
+        ):  # Si es un día de la semana (lunes a viernes)
+            dias += 1
+        fecha_menor += timedelta(days=1)
+    if not es_diferencia_positiva:
+        dias *= -1
+    return dias
+
+
+def veces_supera_siete(dias):
+    veces = dias // 7
+    if dias % 7 != 0:
+        veces += 1
+    return abs(veces)
+
+
+def misma_semana(fecha1, fecha2):
+    if fecha1.isocalendar()[1] == fecha2.isocalendar()[1]:
+        return True
+    else:
+        return False
+
+
+def dias_restantes_mes(fecha):
+    # Obtener el último día del mes
+    ultimo_dia_mes = fecha.replace(day=1, month=fecha.month % 12 + 1) - timedelta(
+        days=1
+    )
+
+    # Calcular la diferencia en días entre la fecha dada y el último día del mes
+    dias_restantes = (ultimo_dia_mes - fecha).days
+
+    return dias_restantes
+
+
+def sumar_semanas(fecha, semanas):
+    nueva_fecha = fecha + timedelta(weeks=semanas)
+
+    return nueva_fecha
+
+
+def siguiente_dia_laborable(fecha_actual):
+    # nombre_dia_semana(fecha_actual)
+    siguiente_dia = fecha_actual + timedelta(days=1)
+
+    while not es_dia_entresemana(siguiente_dia):
+        siguiente_dia += timedelta(days=1)
+
+    # nombre_dia_semana(siguiente_dia)
+    return siguiente_dia
+
+
+def es_dia_entresemana(fecha):
+    return fecha.weekday() < 5
+
+
+def es_viernes(fecha):
+    return fecha.weekday() == 4
+
+
+def primer_cumpleannos(fecha_nacimiento):
+    anno_nacimiento = fecha_nacimiento.year
+    primer_cumpleannos = fecha_nacimiento.replace(year=anno_nacimiento + 1)
+    return primer_cumpleannos
+
+
+def diferencia_menos_de_5_meses(fecha1, fecha2):
+    diferencia_meses = abs(
+        (fecha1.year - fecha2.year) * 12 + fecha1.month - fecha2.month
+    )
+
+    if diferencia_meses < 5:
+        return True
+    else:
+        return False
+
+
+def nombre_dia_semana(fecha):
+    dias_semana = {
+        0: "Lunes",
+        1: "Martes",
+        2: "Miércoles",
+        3: "Jueves",
+        4: "Viernes",
+        5: "Sábado",
+        6: "Domingo",
+    }
+
+    try:
+        dia_semana = fecha.weekday()
+        print(f"fecha: {fecha}")
+        print(f"El día de la semana es: {dias_semana[dia_semana]}")
+    except ValueError:
+        print("Formato de fecha incorrecto. Debe ser en el formato YYYY-MM-DD.")
+
+
+def get_first_day_of_last_months(cantidad_de_meses):
+    """
+    Devuelve una lista con el primer día de cada mes de los últimos 30 meses.
+
+    Returns:
+        list: Una lista de objetos date que representan el primer día de cada mes de los últimos 30 meses.
+    """
+    today = date.today()
+    first_days = []
+
+    for i in range(30):
+        # first_day = date(today.year - (i // 12), today.month - (i % 12) , 1)#+ 1
+        try:
+            first_day = date(
+                today.year - (i // 12), ((today.month + i) % 12) + 1, 1
+            )  # + 1
+        except:
+            print(f"i={i} {today.month} {i % 12} {((today.month + i) % 12)+1 }")  # + 1
+            assert False
+        first_days.append(first_day)
+
+    return first_days
+
+
+def get_first_day_of_last_30_months():
+    return get_first_day_of_last_months(30)
+
+
+def get_diferencia_dias(fecha1, fecha2):
+    diferencia = fecha1 - fecha2
+    return diferencia.days
+
+
+def get_cantidad_dias_entre_semana(inicio, fin):
+    """
+    Calcula la cantidad de días entre semana (lunes a viernes) entre dos fechas.
+
+    Args:
+        inicio : Fecha de inicio .
+        fin : Fecha de fin .
+
+    Returns:
+        int: Cantidad de días entre semana entre las dos fechas.
+    """
+
+    # Inicializar el contador de días entre semana
+    dias_entre_semana = 0
+
+    # Iterar entre las fechas
+    current_date = inicio
+    while current_date <= fin:
+        # Verificar si el día es entre semana (lunes a viernes)
+        if current_date.weekday() < 5 and not es_dia_feriado(current_date):
+            dias_entre_semana += 1
+        # Avanzar al siguiente día
+        current_date += timedelta(days=1)
+
+    return dias_entre_semana
+
+
+def get_cantidad_de_horas_entre_semana(inicio, fin, cantidad_maxima_de_dias=None):
+    # Inicializar el contador de días entre semana
+    suma = 0
+    cantidad_de_dias = 0
+    # Iterar entre las fechas
+    current_date = inicio
+    while current_date <= fin:
+        # Verificar si el día es entre semana (lunes a viernes)
+        if current_date.weekday() < 5:
+            if cantidad_maxima_de_dias and cantidad_de_dias == cantidad_maxima_de_dias:
+                break
+            suma += 8 if es_viernes(current_date) else 9
+            cantidad_de_dias += 1
+        # Avanzar al siguiente día
+        current_date += timedelta(days=1)
+
+    return suma

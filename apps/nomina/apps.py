@@ -8,6 +8,7 @@ def config_app(sender, **kwargs):
         crear_salarios_escalas_default,
     )
     from .utils.utils_ejemplos import (
+        crear_dias_feriados_default,
         create_fake_trabajadores,
         create_usuarios_con_roles_default,
     )
@@ -16,6 +17,7 @@ def config_app(sender, **kwargs):
     crear_roles_django_default()
 
     create_usuarios_con_roles_default()
+    crear_dias_feriados_default()
     create_fake_trabajadores()
 
 

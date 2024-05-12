@@ -14,6 +14,7 @@ from ..models import (
     NOMBRE_ROL_TRABAJADOR,
     Asistencia,
     CertificadoMedicoGeneral,
+    DiaFeriado,
     ExtraCertificadoMedico,
     LicenciaMaternidad,
     LicenciaPrenatal,
@@ -26,15 +27,56 @@ from ..models import (
     SalarioMensualTotalPagado,
     SegundaLicenciaPosnatal,
     Trabajador,
-)
-from .util_salario import (
     es_viernes,
     get_dias_laborales,
     get_first_day_of_last_30_months,
     get_first_day_of_last_months,
 )
 
+DIAS_FERIADOS = (
+    (2021, 1, 1, "Año Nuevo", "Inicio del nuevo año."),
+    (2021, 4, 2, "Viernes Santo", "Celebración religiosa previa a la Pascua."),
+    (2021, 5, 1, "Día del Trabajo", "Conmemoración de los derechos laborales."),
+    (
+        2021,
+        9,
+        15,
+        "Día de la Independencia",
+        "Celebración de la independencia nacional.",
+    ),
+    (2021, 12, 25, "Navidad", "Celebración religiosa del nacimiento de Jesús."),
+    (2022, 1, 1, "Año Nuevo", "Comienzo del nuevo año."),
+    (2022, 4, 15, "Viernes Santo", "Día de conmemoración religiosa."),
+    (2022, 5, 1, "Día del Trabajo", "Reconocimiento a los derechos laborales."),
+    (2022, 9, 15, "Día de la Independencia", "Celebración de la soberanía nacional."),
+    (2022, 12, 25, "Navidad", "Festividad religiosa de la natividad de Jesús."),
+    (2023, 1, 1, "Año Nuevo", "Inicio del año calendario."),
+    (2023, 4, 7, "Viernes Santo", "Día de reflexión religiosa."),
+    (2023, 5, 1, "Día del Trabajo", "Reconocimiento a la labor y derechos laborales."),
+    (2023, 9, 15, "Día de la Independencia", "Celebración de la autonomía nacional."),
+    (2023, 12, 25, "Navidad", "Celebración religiosa del nacimiento de Cristo."),
+    (2024, 1, 1, "Año Nuevo", "Inicio del nuevo año."),
+    (2024, 4, 1, "Viernes Santo", "Día de conmemoración religiosa."),
+    (2024, 5, 1, "Día del Trabajo", "Reconocimiento a los derechos laborales."),
+    (
+        2024,
+        9,
+        15,
+        "Día de la Independencia",
+        "Celebración de la independencia nacional.",
+    ),
+    (2024, 12, 25, "Navidad", "Festividad religiosa del nacimiento de Jesús."),
+)
 fake = Faker()
+
+
+def crear_dias_feriados_default():  # datos_dia_feriado
+    for year, mes, dia, nombre, descripcion in DIAS_FERIADOS:
+        dia_feriado = DiaFeriado()
+        dia_feriado.fecha = timezone.now().replace(year=year, month=mes, day=dia)
+        dia_feriado.nombre = nombre
+        dia_feriado.descripcion = descripcion
+        dia_feriado.save()
 
 
 def obtener_fechas_ultimos_30_meses():

@@ -192,6 +192,7 @@ JAZZMIN_SETTINGS = {
         "nomina.SalarioEscala",
         "nomina.Trabajador",
         "nomina.Asistencia",
+        "nomina.DiaFeriado",
         "nomina.PlanificacionUtilidadesAnuales",
         "nomina.PagoPorUtilidadesAnuales",
         "nomina.LicenciaMaternidad",
@@ -213,6 +214,7 @@ JAZZMIN_SETTINGS = {
         "nomina.LicenciaMaternidad": "fas fa-baby-carriage",
         "nomina.CertificadoMedicoGeneral": "fas fa-user-md",
         "nomina.SalarioMensualTotalPagado": "fas fa-money-check-alt",
+        "nomina.DiaFeriado": "fas fa-gifts",
     },
     # Icons that are used when one is not manually specified
     "default_icon_parents": "fas fa-chevron-circle-right",

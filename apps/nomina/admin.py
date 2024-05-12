@@ -516,3 +516,24 @@ class PlanificacionUtilidadesAnualesAdmin(admin.ModelAdmin):
         "sobrante_por_trabajador",
     )
     date_hierarchy = "fecha"
+
+
+@admin.register(DiaFeriado)
+class DiaFeriadoAdmin(admin.ModelAdmin):
+    list_display = (
+        "fecha",
+        "nombre",
+    )
+    search_fields = (
+        "fecha",
+        "nombre",
+    )
+    list_filter = (
+        "nombre",
+        "fecha",
+    )
+    ordering = (
+        "fecha",
+        "nombre",
+    )
+    date_hierarchy = "fecha"
