@@ -302,7 +302,7 @@ class TrabajadorAdmin(admin.ModelAdmin):
         "carnet",
         "nombre",
         "apellidos",
-        # "categoria_ocupacional",
+        "cargo",
         "email",
         "telefono",
     )
@@ -310,16 +310,16 @@ class TrabajadorAdmin(admin.ModelAdmin):
         "carnet",
         "nombre",
         "apellidos",
-        # "categoria_ocupacional",
+        "cargo",
         "email",
         "telefono",
     )
-    # list_filter = ("escala",)
+    list_filter = ("cargo",)
     ordering = (
         "carnet",
         "nombre",
         "apellidos",
-        # "categoria_ocupacional",
+        "cargo",
         "email",
         "telefono",
     )

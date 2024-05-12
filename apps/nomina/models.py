@@ -23,6 +23,10 @@ from apps.nomina.utils.util_salario import (
     veces_supera_siete,
 )
 
+NOMBRE_CARGO_DIRECTOR = "Director"
+NOMBRE_ROL_ADMINISTRADOR = "Administrador"
+NOMBRE_ROL_TRABAJADOR = "Trabajador"
+
 
 def not_empty_validation(texto):
     if len(str(texto).strip()) == 0:

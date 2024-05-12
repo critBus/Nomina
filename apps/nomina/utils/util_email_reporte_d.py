@@ -7,7 +7,7 @@ from django.http import HttpResponse, HttpResponseServerError
 from django_reportbroD.models import ReportDefinition
 from reportbro import Report, ReportBroError
 
-from ..models import Trabajador
+from ..models import NOMBRE_CARGO_DIRECTOR, Trabajador
 
 
 def custom_export_report_by_name(template_name, data, file="reporte", send_email=False):
@@ -40,7 +40,9 @@ def customReportPDF(
         pdf_report = report_inst.generate_pdf()
 
         if send_email:
-            directores: List[Trabajador] = Trabajador.objects.filter(cargo="Director")
+            directores: List[Trabajador] = Trabajador.objects.filter(
+                cargo=NOMBRE_CARGO_DIRECTOR
+            )
             for director in directores:
                 email_to = director.email
                 if email_to:

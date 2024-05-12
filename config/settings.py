@@ -44,10 +44,10 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "import_export",
+    "django_reportbroD.apps.ReportbrodConfig",
     "apps.base",
     "apps.users",
     "apps.nomina",
-    "django_reportbroD.apps.ReportbrodConfig",
 ]
 
 MIDDLEWARE = [

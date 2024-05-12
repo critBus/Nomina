@@ -1,10 +1,17 @@
 import random
 from datetime import datetime, timedelta
+from typing import List
 
+from django.contrib.auth.models import Group, Permission
 from django.utils import timezone
 from faker import Faker
 
+from apps.users.models import User
+
 from ..models import (
+    NOMBRE_CARGO_DIRECTOR,
+    NOMBRE_ROL_ADMINISTRADOR,
+    NOMBRE_ROL_TRABAJADOR,
     Asistencia,
     CertificadoMedicoGeneral,
     ExtraCertificadoMedico,
@@ -44,6 +51,29 @@ def obtener_fechas_ultimos_30_meses():
     return fechas
 
 
+def create_usuarios_con_roles_default():
+    usuario_administrador = User.objects.create_user(
+        username="administrador",
+        email="administrador@gmail.com",
+        first_name="administrador",
+        last_name="administrador",
+        password="123",
+    )
+    usuario_administrador.is_staff = True
+    usuario_administrador.groups.add(Group.objects.get(name=NOMBRE_ROL_ADMINISTRADOR))
+    usuario_administrador.save()
+    usuario_trabajador = User.objects.create_user(
+        username="trabajador",
+        email="trabajador@gmail.com",
+        first_name="trabajador",
+        last_name="trabajador",
+        password="123",
+    )
+    usuario_trabajador.is_staff = True
+    usuario_trabajador.groups.add(Group.objects.get(name=NOMBRE_ROL_TRABAJADOR))
+    usuario_trabajador.save()
+
+
 def create_fake_trabajadores(num_trabajadores=20):
     salarios = SalarioEscala.objects.all()
     if Trabajador.objects.count() == 0 and salarios.count() > 21:
@@ -53,14 +83,16 @@ def create_fake_trabajadores(num_trabajadores=20):
             #     break
             femenino = random.randint(1, 3) == 2
             Trabajador.objects.create(
-                carnet=fake.unique.numerify(text="############"),
+                carnet=fake.unique.numerify(text="############")[:11],
                 nombre=fake.first_name() if not femenino else fake.first_name_female(),
                 apellidos=fake.last_name(),
                 categoria_ocupacional=fake.random_element(
                     elements=("Categoria1", "Categoria2")
                 ),
                 email=fake.email(),
-                cargo="Jefe" if random.randint(1, 5) == 3 else "Trabajador",
+                cargo=("Jefe" if random.randint(1, 5) == 3 else "Trabajador")
+                if i != 0
+                else NOMBRE_CARGO_DIRECTOR,
                 sexo="Femenino" if femenino else "Masculino",
                 telefono=fake.unique.numerify(text="########"),
                 direccion=fake.address(),
@@ -78,7 +110,7 @@ def create_fake_trabajadores(num_trabajadores=20):
             ("B", 89),
         ]
         fechas_dias = []
-        trabajadores = Trabajador.objects.all()
+        trabajadores: List[Trabajador] = Trabajador.objects.all()
         ultimos_30_meses = get_first_day_of_last_months(
             30
         )  # get_first_day_of_last_30_months()
@@ -118,8 +150,10 @@ def create_fake_trabajadores(num_trabajadores=20):
         planificacion_utilidades.year = planificacion_utilidades.fecha.year - 1
         planificacion_utilidades.save()
 
+        cantidad = 0
         for i, trabajador in enumerate(trabajadores):
-            if i < 5:
+            if cantidad < 5 and trabajador.sexo == "Femenino":
+                cantidad += 1
                 licencia_maternidad = LicenciaMaternidad()
                 licencia_maternidad.trabajador = trabajador
                 mes = 24 + random.randint(1, 5)
@@ -141,6 +175,8 @@ def create_fake_trabajadores(num_trabajadores=20):
                     primera.fecha_inicio = fecha_inicio + timedelta(weeks=45)
                     primera.fecha_fin = primera.fecha_inicio + timedelta(weeks=6)
                     primera.save()
+
+        for i, trabajador in enumerate(trabajadores):
             if i > 5 and i < 10:
                 certificadogeneral = CertificadoMedicoGeneral()
                 certificadogeneral.descripcion = "la descripcion"

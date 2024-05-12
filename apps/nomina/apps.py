@@ -7,11 +7,15 @@ def config_app(sender, **kwargs):
         crear_roles_django_default,
         crear_salarios_escalas_default,
     )
-    from .utils.utils_ejemplos import create_fake_trabajadores
+    from .utils.utils_ejemplos import (
+        create_fake_trabajadores,
+        create_usuarios_con_roles_default,
+    )
 
     crear_salarios_escalas_default()
     crear_roles_django_default()
 
+    create_usuarios_con_roles_default()
     create_fake_trabajadores()
 
 
