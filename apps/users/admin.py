@@ -1,9 +1,9 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.models import Group, Permission
+from django.utils.safestring import mark_safe
 
 from apps.users.models import User
-from django.utils.safestring import mark_safe
-from django.contrib.auth.models import Group, Permission
 
 
 @admin.register(Permission)

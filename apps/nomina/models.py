@@ -1164,17 +1164,17 @@ class PagoPorUtilidadesAnuales(models.Model):
     #     return super().save(*args, **kwargs)
 
 
-class PagoPorSubsidios(models.Model):
-    fecha = models.DateField(verbose_name="Fecha", default=timezone.now)
-    pago = models.DecimalField(
-        decimal_places=2,
-        max_digits=15,
-        verbose_name="Pago Por Subsidios",
-        validators=[MinValueValidator(0)],
-    )
-    trabajador = models.ForeignKey(
-        Trabajador, on_delete=models.CASCADE, verbose_name="Trabajador"
-    )
+# class PagoPorSubsidios(models.Model):
+#     fecha = models.DateField(verbose_name="Fecha", default=timezone.now)
+#     pago = models.DecimalField(
+#         decimal_places=2,
+#         max_digits=15,
+#         verbose_name="Pago Por Subsidios",
+#         validators=[MinValueValidator(0)],
+#     )
+#     trabajador = models.ForeignKey(
+#         Trabajador, on_delete=models.CASCADE, verbose_name="Trabajador"
+#     )
 
 
 class SalarioMensualTotalPagado(models.Model):

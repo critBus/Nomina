@@ -1,4 +1,53 @@
-from ..models import SalarioEscala
+from django.contrib.auth import get_user_model
+from django_reportbroD.models import ReportDefinition, ReportRequest
+
+from config.utils.utils_permission import crear_rol
+
+from ..models import (
+    Asistencia,
+    CertificadoMedicoGeneral,
+    ExtraCertificadoMedico,
+    LicenciaMaternidad,
+    LicenciaPrenatal,
+    PagoPorUtilidadesAnuales,
+    PlanificacionUtilidadesAnuales,
+    PrestacionSocial,
+    PrimeraLicenciaPosnatal,
+    PrimerCertificadoMedico,
+    SalarioEscala,
+    SalarioMensualTotalPagado,
+    SegundaLicenciaPosnatal,
+    Trabajador,
+)
+
+User = get_user_model()
+
+
+def crear_roles_django_default():
+    crear_rol(
+        lista_modelos=[
+            SalarioEscala,
+            Trabajador,
+            Asistencia,
+            CertificadoMedicoGeneral,
+            PrimerCertificadoMedico,
+            ExtraCertificadoMedico,
+            LicenciaMaternidad,
+            LicenciaPrenatal,
+            PrimeraLicenciaPosnatal,
+            SegundaLicenciaPosnatal,
+            PrestacionSocial,
+            PlanificacionUtilidadesAnuales,
+            PagoPorUtilidadesAnuales,
+            SalarioMensualTotalPagado,
+            ReportRequest,
+            ReportDefinition,
+        ],
+        lista_modelos_solo_update=[],
+        lista_modelos_solo_create=[],
+        lista_modelos_solo_view=[],
+        nombre_rol="Administrador",
+    )
 
 
 def crear_salarios_escalas_default():
