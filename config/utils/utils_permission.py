@@ -98,14 +98,16 @@ def crear_rol(
 
     permisos = []
     for m in lista_modelos:
+        print(f"m {m}")
         str_permisos = get_default_model_permissions_full(m)
         for p in str_permisos.get_lista():
-            try:
-                permiso = get_permission_full_name(m, p)
-                permisos.append(permiso)
-            except:
-                print(f"m {m} {p}")
-                assert False
+            # try:
+            # print(f"m {m} {p}")
+            permiso = get_permission_full_name(m, p)
+            permisos.append(permiso)
+            # except:
+            #     print(f"m {m} {p}")
+            #     assert False
     tipos_de_permiso = ["change", "view"]
     for m in lista_modelos_solo_update:
         for tipo in tipos_de_permiso:

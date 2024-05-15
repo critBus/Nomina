@@ -71,12 +71,13 @@ fake = Faker()
 
 
 def crear_dias_feriados_default():  # datos_dia_feriado
-    for year, mes, dia, nombre, descripcion in DIAS_FERIADOS:
-        dia_feriado = DiaFeriado()
-        dia_feriado.fecha = timezone.now().replace(year=year, month=mes, day=dia)
-        dia_feriado.nombre = nombre
-        dia_feriado.descripcion = descripcion
-        dia_feriado.save()
+    if DiaFeriado.objects.count() == 0:
+        for year, mes, dia, nombre, descripcion in DIAS_FERIADOS:
+            dia_feriado = DiaFeriado()
+            dia_feriado.fecha = timezone.now().replace(year=year, month=mes, day=dia)
+            dia_feriado.nombre = nombre
+            dia_feriado.descripcion = descripcion
+            dia_feriado.save()
 
 
 def obtener_fechas_ultimos_30_meses():
@@ -94,26 +95,29 @@ def obtener_fechas_ultimos_30_meses():
 
 
 def create_usuarios_con_roles_default():
-    usuario_administrador = User.objects.create_user(
-        username="administrador",
-        email="administrador@gmail.com",
-        first_name="administrador",
-        last_name="administrador",
-        password="123",
-    )
-    usuario_administrador.is_staff = True
-    usuario_administrador.groups.add(Group.objects.get(name=NOMBRE_ROL_ADMINISTRADOR))
-    usuario_administrador.save()
-    usuario_trabajador = User.objects.create_user(
-        username="trabajador",
-        email="trabajador@gmail.com",
-        first_name="trabajador",
-        last_name="trabajador",
-        password="123",
-    )
-    usuario_trabajador.is_staff = True
-    usuario_trabajador.groups.add(Group.objects.get(name=NOMBRE_ROL_TRABAJADOR))
-    usuario_trabajador.save()
+    if User.objects.count() < 2:
+        usuario_administrador = User.objects.create_user(
+            username="administrador",
+            email="administrador@gmail.com",
+            first_name="administrador",
+            last_name="administrador",
+            password="123",
+        )
+        usuario_administrador.is_staff = True
+        usuario_administrador.groups.add(
+            Group.objects.get(name=NOMBRE_ROL_ADMINISTRADOR)
+        )
+        usuario_administrador.save()
+        usuario_trabajador = User.objects.create_user(
+            username="trabajador",
+            email="trabajador@gmail.com",
+            first_name="trabajador",
+            last_name="trabajador",
+            password="123",
+        )
+        usuario_trabajador.is_staff = True
+        usuario_trabajador.groups.add(Group.objects.get(name=NOMBRE_ROL_TRABAJADOR))
+        usuario_trabajador.save()
 
 
 def create_fake_trabajadores(num_trabajadores=20):
