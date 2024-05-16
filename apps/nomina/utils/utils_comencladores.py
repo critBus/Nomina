@@ -58,7 +58,6 @@ def crear_roles_django_default():
     )
     crear_rol(
         lista_modelos=[
-            SalarioEscala,
             Trabajador,
             Asistencia,
             CertificadoMedicoGeneral,
@@ -78,7 +77,7 @@ def crear_roles_django_default():
         ],
         lista_modelos_solo_update=[],
         lista_modelos_solo_create=[],
-        lista_modelos_solo_view=[],
+        lista_modelos_solo_view=[SalarioEscala],
         nombre_rol=NOMBRE_ROL_TRABAJADOR,
     )
 
