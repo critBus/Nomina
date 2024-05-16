@@ -229,3 +229,8 @@ def generar_reporte_salario_en_el_anno_pdf(modeladmin, request, queryset):
     return custom_export_report_by_name(
         "Salario en el año", data, file="reporte", send_email=True
     )
+
+
+generar_reporte_salario_en_el_anno_pdf.short_description = (
+    "Generar Reporte Salario en el año"
+)
