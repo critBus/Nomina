@@ -1314,6 +1314,21 @@ class SalarioMensualTotalPagado(models.Model):
         default=0,
     )
 
+    salario_anual = models.DecimalField(
+        decimal_places=2,
+        max_digits=15,
+        verbose_name="Salario Anual",
+        validators=[MinValueValidator(0)],
+        default=0,
+    )
+    salario_devengado_semi_anual = models.DecimalField(
+        verbose_name="Salario Devengado Semi Anual ",
+        decimal_places=2,
+        max_digits=15,
+        validators=[MinValueValidator(0)],
+        default=0,
+    )
+
     def get_evalucacion_str(self):
         for evaluacion in self.EVALUACIONES:
             if self.evaluacion_obtenida_por_el_jefe == evaluacion[0]:
@@ -1709,67 +1724,25 @@ class SalarioMensualTotalPagado(models.Model):
         # print(f"suma: {suma}")
         return suma if suma else 0
 
-    #
-    # def buscar_prestacion_economica(self,clase_modelo):
-    #     es_nuevo = self.pk is None
-    #
-    #     suma = 0
-    #     if not es_nuevo:
-    #         clase_modelo.objects.filter(pago_mensual=self,
-    #                                                fecha_inicio__month__gt=self.fecha.month,
-    #                                                fecha_inicio__month__lt=self.fecha.month,
-    #                                                ).exclude(
-    #             fecha_fin__month=self.fecha.month
-    #         ).update(
-    #             pago_mensual=None
-    #         )
-    #         clase_modelo.objects.filter(pago_mensual=self,
-    #                                                fecha_fin__month__gt=self.fecha.month,
-    #                                                fecha_fin__month__lt=self.fecha.month,
-    #                                                ).exclude(
-    #             fecha_inicio__month=self.fecha.month
-    #         ).update(
-    #             pago_mensual=None
-    #         )
-    #         q = clase_modelo.objects.filter(
-    #             Q(pago_mensual=self)
-    #             | Q(fecha_inicio__month=self.fecha.month, pago_mensual__isnull=True)
-    #             | Q(fecha_fin__month=self.fecha.month, pago_mensual__isnull=True)
-    #         )
-    #
-    #     else:
-    #         q = clase_modelo.objects.filter(
-    #             Q(fecha_inicio__month=self.fecha.month, pago_mensual__isnull=True)
-    #             | Q(fecha_fin__month=self.fecha.month, pago_mensual__isnull=True)
-    #         )
-    #     q.update(
-    #         pago_mensual=self
-    #     )
-    #     suma = q.aggregate(total=Sum("prestacion_economica"))["total"]
-    #     # print(f"suma: {suma}")
-    #     return suma if suma else 0
+    def actualizar_estadisticas_pagos(self):
+        self.salario_devengado_semi_anual = calcular_SDSA(self.fecha, self.trabajador)
+        self.salario_anual = calcular_SA(self.fecha, self.trabajador)
 
     def save(self, *args, **kwargs):
         response = super().save(*args, **kwargs)
         self.actualizar_pago()
-        return super().save(*args, **kwargs)
-
-    # @staticmethod
-    # def calcular_pago_maternidad(year_actual,trabajador):
-    #     SA=SalarioMensualTotalPagado.calcular_salario_anual(year_actual-1,trabajador)
+        response = super().save(*args, **kwargs)
+        self.actualizar_estadisticas_pagos()
+        response = super().save(*args, **kwargs)
+        return response
 
     def __str__(self):
         return f"{self.trabajador.nombre} {self.trabajador.apellidos} {self.fecha}"
 
 
 def calcular_cantidad_de_horas_trabajadas_de_los_ultimos(trabajador, cantidad_de_meses):
-    # fecha_limite_inferior = fecha - timezone.timedelta(days=365)
-    # fecha_limite_inferior.replace(day=1)
     TH = (
-        SalarioMensualTotalPagado.objects.filter(
-            # fecha__gte=fecha_limite_inferior,
-            trabajador=trabajador
-        )
+        SalarioMensualTotalPagado.objects.filter(trabajador=trabajador)
         .order_by("-fecha")[:cantidad_de_meses]
         .aggregate(total=Sum("horas_trabajadas"))["total"]
     )
@@ -1777,11 +1750,8 @@ def calcular_cantidad_de_horas_trabajadas_de_los_ultimos(trabajador, cantidad_de
 
 
 def calcular_suma_salario(fecha, trabajador, cantidad_de_meses):
-    # fecha_limite_inferior = fecha - timezone.timedelta(days=365)
-    # fecha_limite_inferior.replace(day=1)
     SA = (
         SalarioMensualTotalPagado.objects.filter(
-            # fecha__gte=fecha_limite_inferior,
             fecha__lte=fecha,
             trabajador=trabajador,
         )
@@ -1801,11 +1771,6 @@ def calcular_SDSA(fecha, trabajador):
 
 def es_dia_feriado(fecha: date):
     return DiaFeriado.objects.filter(fecha=fecha).exists()
-    # for mes, dias in DIAS_FERIADOS:
-    #     if fecha.month == mes:
-    #         if fecha.day in dias:
-    #             return True
-    # return False
 
 
 def get_dias_feriado(year, mes_a_buscar):
@@ -1813,10 +1778,6 @@ def get_dias_feriado(year, mes_a_buscar):
         v.fecha.day
         for v in DiaFeriado.objects.filter(fecha__year=year, fecha__month=mes_a_buscar)
     ]
-    # for mes, dias in DIAS_FERIADOS:
-    #     if mes_a_buscar == mes:
-    #         return dias
-    # return []
 
 
 def get_days_in_month(year, month):
@@ -1830,9 +1791,6 @@ def get_days_in_month(year, month):
         for i in range((end_date - start_date).days + 1)
     ]
     days = list(set(days))
-    # print(f"cantida dias del mes {len(days)}")
-    # days.sort()
-    # print(f"{days[0].month if days else '-'} {days[0].year if days else '-'}  {[v.day for v in days]}")
 
     return days
 
@@ -1899,13 +1857,11 @@ def sumar_semanas(fecha, semanas):
 
 
 def siguiente_dia_laborable(fecha_actual):
-    # nombre_dia_semana(fecha_actual)
     siguiente_dia = fecha_actual + timedelta(days=1)
 
     while not es_dia_entresemana(siguiente_dia):
         siguiente_dia += timedelta(days=1)
 
-    # nombre_dia_semana(siguiente_dia)
     return siguiente_dia
 
 

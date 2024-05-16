@@ -3,16 +3,10 @@ from typing import List
 
 from django.shortcuts import redirect
 from django.urls import reverse
-from django_reportbroD.reportcore import reportPDF
-from django_reportbroD.utils import export_report_by_name
+
 
 from ..models import *
 from .util_email_reporte_d import custom_export_report_by_name
-
-# def redireccionar_a_vista_pdf(nombre_plantilla,data):
-#     data_pdf = json.dumps(data)
-#     url = reverse('generalpdf') + f"?nombre_template={nombre_plantilla}&data_pdf={data_pdf}"
-#     return redirect(url)
 
 
 def redireccionar_a_vista_pdf(nombre_url, queryset):
@@ -21,26 +15,7 @@ def redireccionar_a_vista_pdf(nombre_url, queryset):
     return redirect(url)
 
 
-# def generar_reporte_trabajadores_pdf(modeladmin, request, queryset):
-#     trabajadores = queryset
-#
-#     data = {
-#         "trabajadores": [
-#             {"nombre": v.nombre, "apellidos": v.apellidos, "cargo": v.cargo.cargo}
-#             for v in trabajadores
-#         ],
-#     }
-#
-#     code_report = 1
-#
-#     return reportPDF(request, code_report, data, file="reporte trabajadores")
-
-
-def generar_reporte_maternidad_pdf(
-    modeladmin, request, queryset
-):  # generar_reporte_maternidad_pdf
-    # return redireccionar_a_vista_pdf("generar_reporte_maternidad_view", queryset)
-
+def generar_reporte_maternidad_pdf(modeladmin, request, queryset):
     entidades: List[LicenciaMaternidad] = queryset
     lista = []
     for licencia in entidades:
@@ -72,7 +47,6 @@ def generar_reporte_maternidad_pdf(
 
 
 def generar_reporte_sdm(modeladmin, request, queryset):
-    # return redireccionar_a_vista_pdf("generar_reporte_sdm_view", queryset)
     entidades: List[SalarioMensualTotalPagado] = queryset.order_by("fecha")
     lista = []
     for entidad in entidades:
@@ -99,7 +73,6 @@ def generar_reporte_sdm(modeladmin, request, queryset):
 
 
 def generar_reporte_sbm(modeladmin, request, queryset):
-    # return redireccionar_a_vista_pdf("generar_reporte_sbm_view", queryset)
     entidades: List[SalarioMensualTotalPagado] = queryset.order_by("fecha")
 
     lista = []
@@ -127,7 +100,6 @@ def generar_reporte_sbm(modeladmin, request, queryset):
 
 
 def generar_reporte_certificados(modeladmin, request, queryset):
-    # return redireccionar_a_vista_pdf("generar_reporte_certificados_view", queryset)
     entidades: List[SalarioMensualTotalPagado] = queryset.order_by("fecha")
     lista = []
     for entidad in entidades:
@@ -154,8 +126,6 @@ def generar_reporte_certificados(modeladmin, request, queryset):
 
 
 def general_reporte_prestacion_social_pdf(modeladmin, request, queryset):
-    # return redireccionar_a_vista_pdf("general_reporte_prestacion_social_view", queryset)
-
     entidades: List[PrestacionSocial] = PrestacionSocial.objects.filter(
         licencia_maternidad__in=queryset
     ).order_by("fecha_inicio")
@@ -183,7 +153,6 @@ def general_reporte_prestacion_social_pdf(modeladmin, request, queryset):
 
 
 def generar_reporte_utilidades_pdf(modeladmin, request, queryset):
-    # return redireccionar_a_vista_pdf("generar_reporte_utilidades_view", queryset)
     entidades: List[PagoPorUtilidadesAnuales] = queryset.order_by("fecha")
 
     lista = []
@@ -211,9 +180,6 @@ def generar_reporte_utilidades_pdf(modeladmin, request, queryset):
 
 
 def generar_reporte_historial_de_evaluacion_pdf(modeladmin, request, queryset):
-    # return redireccionar_a_vista_pdf(
-    #     "generar_reporte_historial_de_evaluacion_view", queryset
-    # )
     entidades: List[SalarioMensualTotalPagado] = queryset.order_by("fecha")
     lista = []
     for entidad in entidades:
@@ -233,7 +199,33 @@ def generar_reporte_historial_de_evaluacion_pdf(modeladmin, request, queryset):
         "nombre_reporte": "Historial de evaluación",
         "fecha_imprecion": timezone.now(),
     }
-    # print(len(lista))
     return custom_export_report_by_name(
         "Historial de evaluación", data, file="reporte", send_email=True
+    )
+
+
+def generar_reporte_salario_en_el_anno_pdf(modeladmin, request, queryset):
+    entidades: List[SalarioMensualTotalPagado] = queryset.order_by("fecha")
+    lista = []
+    for entidad in entidades:
+        data_entidad = {
+            "nombre": entidad.trabajador.nombre,
+            "apellidos": entidad.trabajador.apellidos,
+            "cargo": entidad.trabajador.cargo,
+            "ci": entidad.trabajador.carnet,
+            "year": entidad.fecha.year,
+            "mes": entidad.fecha.month,
+            "sa": float(entidad.salario_anual),
+            "SDSA": float(entidad.salario_devengado_semi_anual),
+        }
+        lista.append(data_entidad)
+
+    data = {
+        "lista": lista,
+        "nombre_reporte": "Salario en el año",
+        "fecha_imprecion": timezone.now(),
+    }
+    # print(len(lista))
+    return custom_export_report_by_name(
+        "Salario en el año", data, file="reporte", send_email=True
     )

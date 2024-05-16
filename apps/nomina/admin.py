@@ -13,6 +13,7 @@ from .utils.utils_reportes_d import (
     generar_reporte_sbm,
     generar_reporte_sdm,
     generar_reporte_utilidades_pdf,
+    generar_reporte_salario_en_el_anno_pdf,
 )
 
 
@@ -447,6 +448,7 @@ class SalarioMensualTotalPagadoAdmin(admin.ModelAdmin):
         generar_reporte_sbm,
         generar_reporte_certificados,
         generar_reporte_historial_de_evaluacion_pdf,
+        generar_reporte_salario_en_el_anno_pdf,
     ]
 
 
