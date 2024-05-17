@@ -415,6 +415,8 @@ class SalarioMensualTotalPagadoAdmin(admin.ModelAdmin):
         "pago_certificados_maternidad",
         "pago_utilidades",
         "pago_total",
+        "salario_anual",
+        "salario_devengado_semi_anual",
     )
     list_display = (
         "fecha",
