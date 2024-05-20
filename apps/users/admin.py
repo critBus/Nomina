@@ -42,7 +42,7 @@ class MyUserAdmin(UserAdmin):
     fieldsets = (
         (None, {"fields": ("email", "username", "password")}),
         (
-            "Personal info",
+            "Información Personal",
             {
                 "fields": (
                     "first_name",
@@ -51,7 +51,7 @@ class MyUserAdmin(UserAdmin):
             },
         ),
         (
-            "Permissions",
+            "Permisos",
             {
                 "fields": (
                     "is_active",
