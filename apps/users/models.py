@@ -54,6 +54,10 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractBaseUser, PermissionsMixin):
+    class Meta:
+        verbose_name = "Usuario"
+        verbose_name_plural = "Usuarios"
+
     username = models.CharField(
         max_length=255,
         unique=True,
@@ -80,7 +84,9 @@ class User(AbstractBaseUser, PermissionsMixin):
         default=True,
         verbose_name="Activo",
     )
-    is_staff = models.BooleanField(default=False)
+    is_staff = models.BooleanField(
+        default=True, verbose_name="Puede Entrar a la Adminstración"
+    )
 
     objects = UserManager()
 

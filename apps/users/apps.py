@@ -19,6 +19,7 @@ def config_app(sender, **kwargs):
 
 class UsersConfig(AppConfig):
     name = "apps.users"
+    verbose_name = "Usuarios"
 
     def ready(self):
         post_migrate.connect(config_app, sender=self)

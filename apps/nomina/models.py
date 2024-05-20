@@ -262,19 +262,6 @@ class SalarioEscala(models.Model):
             MinValueValidator(0),
         ],
     )
-    # rango_salarial = models.IntegerField(
-    #     choices=(
-    #         (1, "Rango Salarial 1"),
-    #         (2, "Rango Salarial 2"),
-    #         (3, "Rango Salarial 3"),
-    #         (4, "Rango Salarial 4"),
-    #         (5, "Rango Salarial 5"),
-    #     )
-    # )
-
-    # salario = models.FloatField(
-    #     verbose_name="Salario", validators=[MinValueValidator(0)]
-    # )
 
     @property
     def categoria_ocupacional(self):
