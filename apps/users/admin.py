@@ -39,6 +39,7 @@ class PermissionAdmin(admin.ModelAdmin):
 
 
 class MyUserAdmin(UserAdmin):
+    add_form_template = "admin/auth/user/add_form.html"
     fieldsets = (
         (None, {"fields": ("email", "username", "password")}),
         (
