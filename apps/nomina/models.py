@@ -684,7 +684,7 @@ class LicenciaPrenatal(models.Model):
     importe_semanal = models.DecimalField(
         decimal_places=2,
         max_digits=15,
-        verbose_name="Prestación Económica",
+        verbose_name="Importe Semanal",
         validators=[MinValueValidator(0)],
     )
     salario_anual = models.DecimalField(
