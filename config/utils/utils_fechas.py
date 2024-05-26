@@ -3,6 +3,11 @@ from datetime import date, datetime, timedelta
 from django.utils import timezone
 
 
+def siguiente_dia_seis_semanas(fecha):
+    siguiente_dia = fecha + timedelta(weeks=6)
+    return siguiente_dia
+
+
 def get_days_in_month(year, month):
     start_date = datetime(year, month, 1)
     end_date = start_date.replace(month=start_date.month % 12 + 1, day=1) - timedelta(
@@ -67,15 +72,6 @@ def sumar_semanas(fecha, semanas):
     nueva_fecha = fecha + timedelta(weeks=semanas)
 
     return nueva_fecha
-
-
-def siguiente_dia_laborable(fecha_actual):
-    siguiente_dia = fecha_actual + timedelta(days=1)
-
-    while not es_dia_entresemana(siguiente_dia):
-        siguiente_dia += timedelta(days=1)
-
-    return siguiente_dia
 
 
 def es_dia_entresemana(fecha):

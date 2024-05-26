@@ -21,9 +21,11 @@ class LicenciaPrenatalInline(admin.StackedInline):
     model = LicenciaPrenatal
     extra = 1  # Número de campos extra en el formulario
     readonly_fields = (
+        "fecha_fin",
         "prestacion_economica",
         "importe_semanal",
         "salario_anual",
+
     )
     min_num = 1
     max_num = 1

@@ -17,7 +17,7 @@ from config.utils.utils_fechas import (
     get_horas_correctas,
     misma_semana,
     primer_cumpleannos,
-    siguiente_dia_laborable,
+    siguiente_dia_seis_semanas,
     veces_supera_siete,
 )
 
@@ -697,20 +697,24 @@ class LicenciaPrenatal(models.Model):
 
     def clean(self):
         super().clean()
-        if self.fecha_fin and self.fecha_inicio:
-            if self.fecha_fin <= self.fecha_inicio:
-                raise ValidationError(
-                    "La fecha de inicio debe ser inferior a la fecha de fin "
-                )
-            if not diferencia_semanas_5_a_7(self.fecha_inicio, self.fecha_fin):
-                raise ValidationError(
-                    "Tiene que existir una distancia lógica entre ambas fechas"
-                )
+        # if self.fecha_fin and self.fecha_inicio:
+        #     if self.fecha_fin <= self.fecha_inicio:
+        #         raise ValidationError(
+        #             "La fecha de inicio debe ser inferior a la fecha de fin "
+        #         )
+        #     if not diferencia_semanas_5_a_7(self.fecha_inicio, self.fecha_fin):
+        #         raise ValidationError(
+        #             "Tiene que existir una distancia lógica entre ambas fechas"
+        #         )
 
     def __str__(self):
         return (
             f"{self.trabajador.nombre} {self.trabajador.apellidos} {self.fecha_inicio}"
         )
+
+    def calcular_fecha_fin(self):
+        siguiente_dia = siguiente_dia_seis_semanas(self.fecha_inicio)
+        self.fecha_fin = siguiente_dia_laborable(siguiente_dia, incluir_este_dia=True)
 
     def save(self, *args, **kwargs):
         # nombre_dia_semana(self.fecha_inicio)
@@ -723,6 +727,8 @@ class LicenciaPrenatal(models.Model):
         )  # calcular_ISP(fecha=fecha_de_inicio_del_embarazo,trabajador=self.trabajador )
         self.importe_semanal = ISP
         self.prestacion_economica = ISP * 6 if self.es_simple else ISP * 8
+        self.calcular_fecha_fin()
+
         return super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
@@ -1796,3 +1802,14 @@ def get_cantidad_dias_entre_semana(inicio, fin):
         current_date += timedelta(days=1)
 
     return dias_entre_semana
+
+
+def siguiente_dia_laborable(fecha_actual, incluir_este_dia=False):
+    siguiente_dia = (
+        fecha_actual + timedelta(days=1) if not incluir_este_dia else fecha_actual
+    )
+
+    while (not es_dia_entresemana(siguiente_dia)) and not es_dia_feriado(siguiente_dia):
+        siguiente_dia += timedelta(days=1)
+
+    return siguiente_dia
