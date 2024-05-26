@@ -29,6 +29,7 @@ class LicenciaPrenatalInline(admin.StackedInline):
     max_num = 1
     exclude = [
         "trabajador",
+        "pago_mensual",
     ]
     can_delete = False
 
@@ -37,7 +38,9 @@ class PrimeraLicenciaPosnatalInline(admin.StackedInline):
     model = PrimeraLicenciaPosnatal
     extra = 1  # Número de campos extra en el formulario
     readonly_fields = ("prestacion_economica",)
-
+    exclude = [
+        "pago_mensual",
+    ]
     max_num = 1
 
 
@@ -49,6 +52,9 @@ class SegundaLicenciaPosnatalInline(admin.StackedInline):
         "fecha_fin",
         "prestacion_economica",
     )
+    exclude = [
+        "pago_mensual",
+    ]
     # min_num = 1
     max_num = 1
     can_delete = False
@@ -62,6 +68,9 @@ class PrestacionSocialInline(admin.StackedInline):
         "fecha_fin",
         "prestacion_economica",
     )
+    exclude = [
+        "pago_mensual",
+    ]
     can_delete = False
     # min_num = 1
     max_num = 1
@@ -358,6 +367,9 @@ class PrimerCertificadoMedicoInline(admin.StackedInline):
     )
     min_num = 1
     can_delete = False
+    exclude = [
+        "pago_mensual",
+    ]
 
 
 class ExtraCertificadoMedicoInline(admin.StackedInline):
@@ -369,8 +381,9 @@ class ExtraCertificadoMedicoInline(admin.StackedInline):
         "horas_laborales_en_dias_de_carencia",
     )
 
-    # def has_delete_permission(self, request, obj=None):
-    #     return obj and obj.es_primero()
+    exclude = [
+        "pago_mensual",
+    ]
 
 
 @admin.register(CertificadoMedicoGeneral)
@@ -481,11 +494,9 @@ class PagoPorUtilidadesAnualesAdmin(admin.ModelAdmin):
     )
     date_hierarchy = "fecha"
     actions = [generar_reporte_utilidades_pdf]
-
-    # def save_model(self, request, obj, form, change):
-    #     obj.calcular_pago()
-    #     response = super().save_model(request, obj, form, change)
-    #     return response
+    exclude = [
+        "pago_mensual",
+    ]
 
 
 @admin.register(PlanificacionUtilidadesAnuales)
