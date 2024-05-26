@@ -7,6 +7,7 @@ from django.utils import timezone
 from faker import Faker
 
 from apps.users.models import User
+from config.utils.utils_fechas import get_first_day_of_last_months
 
 from ..models import (
     NOMBRE_CARGO_DIRECTOR,
@@ -29,8 +30,6 @@ from ..models import (
     Trabajador,
     es_viernes,
     get_dias_laborales,
-    get_first_day_of_last_30_months,
-    get_first_day_of_last_months,
 )
 
 DIAS_FERIADOS = (

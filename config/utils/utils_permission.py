@@ -98,7 +98,7 @@ def crear_rol(
 
     permisos = []
     for m in lista_modelos:
-        print(f"m {m}")
+        # print(f"m {m}")
         str_permisos = get_default_model_permissions_full(m)
         for p in str_permisos.get_lista():
             # try:

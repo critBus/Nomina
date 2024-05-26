@@ -4,7 +4,6 @@ from typing import List
 from django.shortcuts import redirect
 from django.urls import reverse
 
-
 from ..models import *
 from .util_email_reporte_d import custom_export_report_by_name
 
