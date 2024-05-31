@@ -25,7 +25,6 @@ class LicenciaPrenatalInline(admin.StackedInline):
         "prestacion_economica",
         "importe_semanal",
         "salario_anual",
-
     )
     min_num = 1
     max_num = 1

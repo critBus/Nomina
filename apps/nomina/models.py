@@ -6,6 +6,7 @@ from django.db import models
 from django.db.models import Q, Sum
 from django.utils import timezone
 
+from apps.nomina.utils.utils import mas_de_uno_en_true
 from config.utils.utils_fechas import (
     dias_restantes_mes,
     diferencia_semanas_5_a_7,
@@ -1722,6 +1723,17 @@ class SalarioMensualTotalPagado(models.Model):
         self.actualizar_estadisticas_pagos()
         response = super().save(*args, **kwargs)
         return response
+
+    def clean(self):
+        super().clean()
+        if mas_de_uno_en_true(
+            self.valorar_utilidades,
+            self.valorar_certificados_medicos,
+            self.valorar_certificados_maternidad,
+        ):
+            raise ValidationError(
+                "No se puede valorar mas de una condición al mismo tiempo"
+            )
 
     def __str__(self):
         return f"{self.trabajador.nombre} {self.trabajador.apellidos} {self.fecha}"
