@@ -1,12 +1,15 @@
 from datetime import date, timedelta
 
+from django.contrib.postgres.fields import DateRangeField, DateTimeRangeField
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator
 from django.db import models
+from django.db.backends.postgresql.psycopg_any import DateRange, DateTimeTZRange
 from django.db.models import Q, Sum
 from django.utils import timezone
 
 from apps.nomina.utils.utils import mas_de_uno_en_true
+
 from config.utils.utils_fechas import (
     dias_restantes_mes,
     diferencia_semanas_5_a_7,
@@ -473,6 +476,7 @@ class PrimerCertificadoMedico(models.Model):
         null=True,
         blank=True,
     )
+    date_range = DateRangeField(null=True, blank=True, db_index=True)
 
     def clean(self):
         super().clean()
@@ -480,6 +484,10 @@ class PrimerCertificadoMedico(models.Model):
             if self.fecha_fin <= self.fecha_inicio:
                 raise ValidationError(
                     "La fecha de inicio debe ser inferior a la fecha de fin "
+                )
+            if self.certificado_medico_general:
+                se_intercepta(
+                    trabajador=self.certificado_medico_general.trabajador, entidad=self
                 )
 
     def __str__(self):
@@ -526,6 +534,8 @@ class PrimerCertificadoMedico(models.Model):
 
     def save(self, *args, **kwargs):
         self.actualizar_pago()
+        self.date_range = DateRange(self.fecha_inicio, self.fecha_fin, bounds="[]")
+        # self.date_range=(self.fecha_inicio, self.fecha_fin)
         return super().save(*args, **kwargs)
 
 
@@ -568,6 +578,7 @@ class ExtraCertificadoMedico(models.Model):
         null=True,
         blank=True,
     )
+    date_range = DateRangeField(null=True, blank=True, db_index=True)
 
     def clean(self):
         super().clean()
@@ -575,6 +586,10 @@ class ExtraCertificadoMedico(models.Model):
             if self.fecha_fin <= self.fecha_inicio:
                 raise ValidationError(
                     "La fecha de inicio debe ser inferior a la fecha de fin "
+                )
+            if self.certificado_medico_general:
+                se_intercepta(
+                    trabajador=self.certificado_medico_general.trabajador, entidad=self
                 )
 
     def __str__(self):
@@ -624,6 +639,7 @@ class ExtraCertificadoMedico(models.Model):
 
     def save(self, *args, **kwargs):
         self.actualizar_pago()
+        self.date_range = DateRange(self.fecha_inicio, self.fecha_fin, bounds="[]")
         return super().save(*args, **kwargs)
 
 
@@ -695,18 +711,12 @@ class LicenciaPrenatal(models.Model):
         null=True,
         blank=True,
     )
+    date_range = DateRangeField(null=True, blank=True, db_index=True)
 
     def clean(self):
         super().clean()
-        # if self.fecha_fin and self.fecha_inicio:
-        #     if self.fecha_fin <= self.fecha_inicio:
-        #         raise ValidationError(
-        #             "La fecha de inicio debe ser inferior a la fecha de fin "
-        #         )
-        #     if not diferencia_semanas_5_a_7(self.fecha_inicio, self.fecha_fin):
-        #         raise ValidationError(
-        #             "Tiene que existir una distancia lógica entre ambas fechas"
-        #         )
+        if self.fecha_inicio and self.fecha_fin:
+            se_intercepta(trabajador=self.trabajador, entidad=self)
 
     def __str__(self):
         return (
@@ -730,6 +740,7 @@ class LicenciaPrenatal(models.Model):
         self.prestacion_economica = ISP * 6 if self.es_simple else ISP * 8
         self.calcular_fecha_fin()
 
+        self.date_range = DateRange(self.fecha_inicio, self.fecha_fin, bounds="[]")
         return super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
@@ -775,6 +786,7 @@ class PrimeraLicenciaPosnatal(models.Model):
         null=True,
         blank=True,
     )
+    date_range = DateRangeField(null=True, blank=True, db_index=True)
 
     def clean(self):
         super().clean()
@@ -783,16 +795,10 @@ class PrimeraLicenciaPosnatal(models.Model):
                 raise ValidationError(
                     "La fecha de inicio debe ser inferior a la fecha de fin "
                 )
-
-            # if self.licencia_maternidad and self.licencia_maternidad.licenciaprenatal:
-            #     licencia_prenatal=self.licencia_maternidad.licenciaprenatal
-            #     #self.licencia_prenatal=self.licencia_maternidad.licenciaprenatal
-            #     if diferencia_menos_de_5_meses(
-            #         licencia_prenatal.fecha_inicio, self.fecha_inicio
-            #     ):
-            #         raise ValidationError(
-            #             "Tiene que existir una distancia lógica entre ambas fechas"
-            #         )
+            if self.licencia_maternidad:
+                se_intercepta(
+                    trabajador=self.licencia_maternidad.trabajador, entidad=self
+                )
 
     def save(self, *args, **kwargs):
         es_nuevo = self.pk is None
@@ -837,6 +843,7 @@ class PrimeraLicenciaPosnatal(models.Model):
             if not es_nuevo
             else None,
         )
+        self.date_range = DateRange(self.fecha_inicio, self.fecha_fin, bounds="[]")
         return response
 
     def delete(self, *args, **kwargs):
@@ -864,12 +871,6 @@ class SegundaLicenciaPosnatal(models.Model):
         verbose_name="Fecha fin", validators=[date_not_old_validation]
     )
 
-    # primera_licencia_posnatal = models.OneToOneField(
-    #     PrimeraLicenciaPosnatal,
-    #     on_delete=models.CASCADE,
-    #     verbose_name="Primera Licencia Posnatal",
-    #
-    # )
     prestacion_economica = models.DecimalField(
         decimal_places=2,
         max_digits=15,
@@ -888,6 +889,7 @@ class SegundaLicenciaPosnatal(models.Model):
         null=True,
         blank=True,
     )
+    date_range = DateRangeField(null=True, blank=True, db_index=True)
 
     def clean(self):
         super().clean()
@@ -895,6 +897,10 @@ class SegundaLicenciaPosnatal(models.Model):
             if self.fecha_fin <= self.fecha_inicio:
                 raise ValidationError(
                     "La fecha de inicio debe ser inferior a la fecha de fin "
+                )
+            if self.licencia_maternidad:
+                se_intercepta(
+                    trabajador=self.licencia_maternidad.trabajador, entidad=self
                 )
 
     def save(self, *args, **kwargs):
@@ -913,6 +919,7 @@ class SegundaLicenciaPosnatal(models.Model):
             if not es_nuevo
             else None,
         )
+        self.date_range = DateRange(self.fecha_inicio, self.fecha_fin, bounds="[]")
         return response
 
     def __str__(self):
@@ -946,12 +953,6 @@ class PrestacionSocial(models.Model):
         verbose_name="Fecha fin", validators=[date_not_old_validation]
     )
 
-    # segunda_licencia_posnatal = models.OneToOneField(
-    #     SegundaLicenciaPosnatal,
-    #     on_delete=models.CASCADE,
-    #     verbose_name="Segunda Licencia Posnatal",
-    #
-    # )
     prestacion_economica = models.DecimalField(
         decimal_places=2,
         max_digits=15,
@@ -970,6 +971,7 @@ class PrestacionSocial(models.Model):
         null=True,
         blank=True,
     )
+    date_range = DateRangeField(null=True, blank=True, db_index=True)
 
     def clean(self):
         super().clean()
@@ -977,6 +979,10 @@ class PrestacionSocial(models.Model):
             if self.fecha_fin <= self.fecha_inicio:
                 raise ValidationError(
                     "La fecha de inicio debe ser inferior a la fecha de fin "
+                )
+            if self.licencia_maternidad:
+                se_intercepta(
+                    trabajador=self.licencia_maternidad.trabajador, entidad=self
                 )
 
     def save(self, *args, **kwargs):
@@ -990,6 +996,7 @@ class PrestacionSocial(models.Model):
                 if not cantidad_de_dias > 24:
                     PD = (PM / 24) * 60 / 100
                     self.prestacion_economica += cantidad_de_dias * PD
+        self.date_range = DateRange(self.fecha_inicio, self.fecha_fin, bounds="[]")
         return super().save(*args, **kwargs)
 
     def __str__(self):
@@ -1825,3 +1832,55 @@ def siguiente_dia_laborable(fecha_actual, incluir_este_dia=False):
         siguiente_dia += timedelta(days=1)
 
     return siguiente_dia
+
+
+def se_intercepta(trabajador, entidad):
+    date_range = DateRange(entidad.fecha_inicio, entidad.fecha_fin, bounds="[]")
+
+    es_nuevo = entidad.pk is None
+
+    def comprobar_query_intercepcion(q, mensaje):
+        clase = q.model
+        if (not es_nuevo) and isinstance(entidad, clase):
+            q = q.exclude(pk=entidad.pk)
+        if q.exists():
+            raise ValidationError(mensaje)
+
+    comprobar_query_intercepcion(
+        PrimerCertificadoMedico.objects.filter(
+            date_range__overlap=date_range,
+            certificado_medico_general__trabajador=trabajador,
+        ),
+        "Existe otro primer certificado cuyas fechas se interceptan con las actuales",
+    )
+    comprobar_query_intercepcion(
+        ExtraCertificadoMedico.objects.filter(
+            date_range__overlap=date_range,
+            certificado_medico_general__trabajador=trabajador,
+        ),
+        "Existe otro certificado cuyas fechas se interceptan con las actuales",
+    )
+    comprobar_query_intercepcion(
+        LicenciaPrenatal.objects.filter(
+            date_range__overlap=date_range, trabajador=trabajador
+        ),
+        "Ya existe una licencia prenatal que se intercepta con estas fechas ",
+    )
+    comprobar_query_intercepcion(
+        PrimeraLicenciaPosnatal.objects.filter(
+            date_range__overlap=date_range, licencia_maternidad__trabajador=trabajador
+        ),
+        "Ya existe una primera licencia posnatal que se intercepta con estas fechas ",
+    )
+    comprobar_query_intercepcion(
+        SegundaLicenciaPosnatal.objects.filter(
+            date_range__overlap=date_range, licencia_maternidad__trabajador=trabajador
+        ),
+        "Ya existe una segunda licencia posnatal que se intercepta con estas fechas ",
+    )
+    comprobar_query_intercepcion(
+        PrestacionSocial.objects.filter(
+            date_range__overlap=date_range, licencia_maternidad__trabajador=trabajador
+        ),
+        "Ya existe una prestacion que se intercepta con estas fechas ",
+    )

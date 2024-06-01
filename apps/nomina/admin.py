@@ -31,6 +31,7 @@ class LicenciaPrenatalInline(admin.StackedInline):
     exclude = [
         "trabajador",
         "pago_mensual",
+        "date_range",
     ]
     can_delete = False
 
@@ -41,6 +42,7 @@ class PrimeraLicenciaPosnatalInline(admin.StackedInline):
     readonly_fields = ("prestacion_economica",)
     exclude = [
         "pago_mensual",
+        "date_range",
     ]
     max_num = 1
 
@@ -55,6 +57,7 @@ class SegundaLicenciaPosnatalInline(admin.StackedInline):
     )
     exclude = [
         "pago_mensual",
+        "date_range",
     ]
     # min_num = 1
     max_num = 1
@@ -71,6 +74,7 @@ class PrestacionSocialInline(admin.StackedInline):
     )
     exclude = [
         "pago_mensual",
+        "date_range",
     ]
     can_delete = False
     # min_num = 1
@@ -370,6 +374,7 @@ class PrimerCertificadoMedicoInline(admin.StackedInline):
     can_delete = False
     exclude = [
         "pago_mensual",
+        "date_range",
     ]
 
 
@@ -384,6 +389,7 @@ class ExtraCertificadoMedicoInline(admin.StackedInline):
 
     exclude = [
         "pago_mensual",
+        "date_range",
     ]
 
 
