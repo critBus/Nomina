@@ -1,14 +1,14 @@
 import io
 import json
 from typing import List
-
+from django.conf import settings
 from django.core.mail import EmailMessage
 from django.http import HttpResponse, HttpResponseServerError
 from django_reportbroD.models import ReportDefinition
 from reportbro import Report, ReportBroError
-
+import os
 from ..models import NOMBRE_CARGO_DIRECTOR, Trabajador
-
+from django.utils import timezone
 
 def custom_export_report_by_name(template_name, data, file="reporte", send_email=False):
     """Export a report using its name"""
@@ -39,7 +39,7 @@ def customReportPDF(
 
         pdf_report = report_inst.generate_pdf()
 
-        if send_email:
+        if send_email and settings.SEND_EMAIL:
             directores: List[Trabajador] = Trabajador.objects.filter(
                 cargo=NOMBRE_CARGO_DIRECTOR
             )
@@ -70,3 +70,40 @@ def customReportPDF(
         # Handle any exceptions or errors that may occur during the process
         print(f"An error occurred: {str(e)}")
         return HttpResponse("An error occurred while processing the report")
+
+
+
+def load_json(filename, force=False):
+    actual = timezone.now()
+    file = json.load(open(filename, "r"))
+    name = file["name"]
+    if not ReportDefinition.objects.filter(name=name).exists():
+        ReportDefinition.objects.create(
+            name=name,
+            report_definition=file["report_definition"],
+            remark=file["remark"],
+            last_modified_at=actual,
+        )
+        print(f"reporte cargado: {name}")
+    elif force:
+        ReportDefinition.objects.filter(name=name).delete()
+        ReportDefinition.objects.create(
+            name=name,
+            report_definition=file["report_definition"],
+            remark=file["remark"],
+            last_modified_at=actual,
+        )
+        print(f"reporte cargado: {name}")
+
+
+def load_report(repor_name, folder="reportes_json", force=False):
+    filename = f"{repor_name}.json"
+    dire = os.path.join(settings.BASE_DIR, folder)
+    load_json(os.path.join(dire, filename), force=force)
+
+
+def load_automatic_reports(folder="reportes_json"):
+    print("cargando reportes ...")
+    dire = os.path.join(settings.BASE_DIR, folder)
+    for filename in os.listdir(dire):
+        load_json(os.path.join(dire, filename))

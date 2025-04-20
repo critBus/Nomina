@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
-from django_reportbroD.models import ReportDefinition, ReportRequest
+
 
 from config.utils.utils_permission import crear_rol
 
@@ -45,8 +45,6 @@ def crear_roles_django_default():
             PagoPorUtilidadesAnuales,
             SalarioMensualTotalPagado,
             DiaFeriado,
-            ReportRequest,
-            ReportDefinition,
             User,
             Group,
             Permission,
@@ -72,8 +70,7 @@ def crear_roles_django_default():
             PagoPorUtilidadesAnuales,
             SalarioMensualTotalPagado,
             DiaFeriado,
-            ReportRequest,
-            ReportDefinition,
+            
         ],
         lista_modelos_solo_update=[],
         lista_modelos_solo_create=[],

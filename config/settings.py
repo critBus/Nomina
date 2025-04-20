@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "apps.base",
     "apps.users",
     "apps.nomina",
+    
 ]
 
 MIDDLEWARE = [
@@ -73,7 +74,6 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                "django_reportbroD.menus.get_menu_items",
             ],
         },
     },
@@ -230,13 +230,17 @@ DJANGO_SUPERUSER_FIRST_NAME = os.environ.get("DJANGO_SUPERUSER_FIRST_NAME")
 DJANGO_SUPERUSER_LAST_NAME = os.environ.get("DJANGO_SUPERUSER_LAST_NAME")
 
 
-# Emailing settings
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = os.environ.get("EMAIL_HOST")
-EMAIL_FROM = os.environ.get("EMAIL_HOST_USER")
-EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
-EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-DEFAULT_FROM_EMAIL = os.environ.get("EMAIL_HOST_USER")
-SERVER_EMAIL = os.environ.get("EMAIL_HOST_USER")
+SEND_EMAIL = os.environ.get("SEND_EMAIL").lower() == "true"
+LOAD_EXAMPLE_DATA = os.environ.get("LOAD_EXAMPLE_DATA").lower() == "true"
+
+if SEND_EMAIL:
+    # Emailing settings
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    EMAIL_HOST = os.environ.get("EMAIL_HOST")
+    EMAIL_FROM = os.environ.get("EMAIL_HOST_USER")
+    EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
+    EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
+    DEFAULT_FROM_EMAIL = os.environ.get("EMAIL_HOST_USER")
+    SERVER_EMAIL = os.environ.get("EMAIL_HOST_USER")

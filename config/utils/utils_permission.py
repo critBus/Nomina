@@ -45,6 +45,8 @@ def get_default_model_permissions_full(model) -> StrPermisosModelo:
 
 
 def get_permission_full_name(clase_modelo, nombre_permiso):
+    # print(f"clase_modelo {clase_modelo}")
+    # print(f"nombre_permiso {nombre_permiso}")
     content_type = ContentType.objects.get_for_model(clase_modelo)
     permission = Permission.objects.get(
         codename=nombre_permiso, content_type=content_type
