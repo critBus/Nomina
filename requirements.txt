@@ -15,5 +15,6 @@ djangorestframework==3.14.0
 pytest==7.4.3
 django-jazzmin==2.6.0
 python-dotenv==1.0.0
+gunicorn
 
 
